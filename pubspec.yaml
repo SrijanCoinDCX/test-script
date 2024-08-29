@@ -1,8 +1,5 @@
-name: myapp
-description: "A new Flutter project."
-# The following line prevents the package from being accidentally published to
-# pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+name: okto_app
+description: A new Flutter project.
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -11,60 +8,259 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # build by specifying --build-name and --build-number, respectively.
 # In Android, build-name is used as versionName while build-number used as versionCode.
 # Read more about Android versioning at https://developer.android.com/studio/publish/versioning
-# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
+# In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-# In Windows, build-name is used as the major, minor, and patch parts
-# of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+1
+version: 5.00.000+500000
+publish_to: none
 
 environment:
-  sdk: '>=3.3.4 <4.0.0'
+  sdk: ">=3.3.0 <4.0.0"
 
-# Dependencies specify other packages that your package needs in order to work.
-# To automatically upgrade your package dependencies to the latest versions
-# consider running `flutter pub upgrade --major-versions`. Alternatively,
-# dependencies can be manually updated by changing the version numbers below to
-# the latest version available on pub.dev. To see which dependencies have newer
-# versions available, run `flutter pub outdated`.
 dependencies:
+  flutter_localizations:
+    sdk: flutter
   flutter:
     sdk: flutter
 
+  web_socket_channel: ^2.4.0
+  get: ^4.6.6
+  image_picker: ^0.8.5+3
+  shared_preferences: ^2.0.15
+  dartz: ^0.10.1
+  pinput: ^2.2.18
+  rxdart: ^0.27.5
+  dio: ^5.2.1
+  shimmer: ^2.0.0
+  firebase_crashlytics: 4.0.2
+  firebase_auth: 5.1.1
+  lazy_load_indexed_stack: ^0.1.4
+  ntp: ^2.0.0
+  firebase_core: 3.1.1
+  firebase_database: 11.0.2
+  intl: ^0.18.0
+  path_provider: ^2.1.3
+  connectivity_plus: 6.0.3
+  speed_test_dart: ^1.0.4+1
+  crypto: 3.0.3
+  qr_flutter: 4.1.0
+  qr_code_scanner: ^1.0.1
+  share_plus: ^9.0.0
+  flutter_displaymode: ^0.6.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.6
+
+  just_the_tooltip: ^0.0.12
+  package_info_plus: ^8.0.0
+  #  flutter_secure_storage: ^9.2.1
+  #  flutter_secure_storage_windows: 2.0.0
+  dart_code_metrics: ^5.4.0
+  hex: ^0.2.0
+  fluttertoast: ^8.2.5
+  clipboard: ^0.1.3
+  encrypt: 5.0.1
+  google_sign_in: ^6.2.1
+  googleapis: 11.2.0
+  path: ^1.8.2
+  cached_network_image: ^3.2.1
+  firebase_dynamic_links: 6.0.2
+  flutter_windowmanager: ^0.2.0
+  advance_pdf_viewer_fork: ^2.0.0
+  decimal: ^2.2.0
+  flutter_svg: 2.0.7
+  device_info_plus: ^9.1.2
+  firebase_messaging: 15.0.1
+  transparent_image: ^2.0.0
+  sqflite: ^2.3.3
+  flutter_riverpod: ^2.3.0
+  flutter_keyboard_visibility: 5.4.1
+  lottie: ^3.1.0
+  walletconnect_flutter_v2: 2.1.4
+  advertising_id: ^2.4.0
+  single_factor_auth_flutter: 4.0.0
+  file_picker: ^8.0.3
+  flutter_inappwebview: ^6.0.0
+  in_app_review: ^2.0.8
+  screen_protector: ^1.4.2
+
+  # from overrides
+  visibility_detector: ^0.4.0+2
+  flutter_html: 3.0.0-beta.1
+  collection: ^1.16.0
+  figma_squircle: ^0.5.3
+  mobile_scanner: 3.5.2
+  bip39: 1.0.6
+  web3dart: 2.7.2
+  ed25519_hd_key: 2.2.1
+  hd_wallet_kit: 0.0.2
+  asn1lib: any
+  pinenacl: 0.5.1
+  bs58: 1.0.2
+  ecdsa: 0.1.0
+  cryptography: 2.7.0
+  solana: 0.30.3
+
+  # internal dependencies
+  webview_dcx:
+    #path: ../coindcx_feature_packages/packages/webview_dcx
+    git:
+      url: git@github.com:coindcx-app/coindcx_feature_packages
+      path: packages/webview_dcx
+      ref: develop
+
+  coindcx_core:
+    #     path: ../coindcx_flutter_library
+    git:
+      url: git@github.com:coindcx-app/coindcx_flutter_library.git
+      ref: develop
+
+  coindcx_ui_components:
+    #     path: ../uicomponents-service-mobile/coindcx_ui_components
+    git:
+      url: git@github.com:coindcx-app/mobile_uicomp_config_mobile.git
+      path: coindcx_ui_components
+      ref: develop
+
+  ui_kit_dcx:
+    #         path: ../ui_kit_dcx_mobile/packages/ui_kit_dcx
+    git:
+      url: git@github.com:coindcx-app/ui_kit_dcx_mobile.git
+      path: packages/ui_kit_dcx
+      ref: defi_release_new
+
+  okto_mobile_sdk:
+    #       path: ../defi-sdk/okto_mobile_sdk
+    git:
+      url: git@github.com:coindcx-app/defi-sdk.git
+      path: okto_mobile_sdk
+      ref: DS-377
+
+dependency_overrides:
+  js: ^0.7.1 # due to conflict of socket_io_client and mixpanel_flutter
+  web: ^0.5.1 # due to conflict of flutter_sdk and firebase_analytics
+  uuid: ^4.0.0 # due to conflict of web3dart and dart_code_metrics
+  http: ^1.1.0 # due to conflict of solana and dart_code_metrics
+  google_sign_in_ios: 5.7.4 # due to pod install conflict of GTMSessionFetcher
+  webview_flutter_android: 3.16.1
+  # moengage_flutter_android: 2.1.0 # due to moEngage crash
+  # moengage_inbox_android: 2.1.0 # due to moEngage crash
+  moengage_flutter: 7.0.0
+  moengage_flutter_android: 2.0.0
+  moengage_flutter_ios: 2.1.0
+  moengage_flutter_platform_interface: 2.0.0
+  moengage_flutter_web: 3.0.0
+  plotline_engage: 4.3.5
+  single_factor_auth_flutter: 4.0.0
+
+  dcx_alice:
+    git:
+      url: git@github.com:coindcx-app/dcx-alice-mobile.git
+      ref: alice-web-api-logs
+
+  coindcx_di:
+    #    path: ../coindcx_di
+    git:
+      url: git@github.com:coindcx-app/mobile_di_library.git
+      ref: master
+
+  coindcx_network:
+    #      path: ../network_service_mobile
+    git:
+      url: git@github.com:coindcx-app/network-service-mobile.git
+      ref: develop
+  coindcx_core:
+    #     path: ../coindcx_flutter_library
+    git:
+      url: git@github.com:coindcx-app/coindcx_flutter_library.git
+      ref: develop
+
+  coindcx_analytics:
+    #     path: ../event-service-mobile
+    git:
+      url: git@github.com:coindcx-app/event-service-mobile.git
+      ref: develop
+
+  coindcx_ui_components:
+    #     path: ../uicomponents-service-mobile/coindcx_ui_components
+    git:
+      url: git@github.com:coindcx-app/mobile_uicomp_config_mobile.git
+      path: coindcx_ui_components
+      ref: develop
+
+  ui_kit_dcx:
+    #         path: ../ui_kit_dcx_mobile/packages/ui_kit_dcx
+    git:
+      url: git@github.com:coindcx-app/ui_kit_dcx_mobile.git
+      path: packages/ui_kit_dcx
+      ref: develop
+
+  stories_dcx:
+    git:
+      url: git@github.com:coindcx-app/engagement_engg_mobile_repo.git
+      path: packages/stories_dcx
+      ref: defi_release
+
+  sockets_dcx:
+    #     path: ../ui_kit_dcx_mobile/packages/sockets_dcx
+    git:
+      url: git@github.com:coindcx-app/ui_kit_dcx_mobile.git
+      path: packages/sockets_dcx
+      ref: develop
+
+  webview_dcx:
+    #path: ../coindcx_feature_packages/packages/webview_dcx
+    git:
+      url: git@github.com:coindcx-app/coindcx_feature_packages
+      path: packages/webview_dcx
+      ref: develop
 
 dev_dependencies:
+  flutter_lints: ^1.0.4
+  dependency_validator: ^3.0.0
+  dart_code_metrics: ^5.7.3
+  delete_un_used_assets: ^1.0.1
+
   flutter_test:
     sdk: flutter
-
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
-  flutter_lints: ^3.0.0
+  mockito: ^5.0.15
+  build_runner:
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
-# The following section is specific to Flutter packages.
+# The following section is specific to Flutter.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - lang/
+    - assets/
+    - assets/icons/
+    - assets/icons/logos/
+    - assets/icons/light/
+    - assets/icons/dark/
+    - assets/icons/animation/
+    - assets/icons/animation/wallet_creation/
+    - assets/icons/animation/coindcx_oauth/
+    - assets/icons/animation/intro_screen_image/
+    - assets/icons/bottom_nav/
+    - assets/icons/lottie_files/
+    - assets/icons/dark/lottie_files/
+    - assets/icons/light/lottie_files/
+    - assets/json/
+    - images/
+    - assets/in_app_browser/
+
+  #  - images/a_dot_burr.jpeg
+  #  - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
-  # https://flutter.dev/assets-and-images/#resolution-aware
+  # https://flutter.dev/assets-and-images/#resolution-aware.
 
   # For details regarding adding assets from package dependencies, see
   # https://flutter.dev/assets-and-images/#from-packages
@@ -74,17 +270,9 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
+
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+flutter_intl:
+  enabled: true
