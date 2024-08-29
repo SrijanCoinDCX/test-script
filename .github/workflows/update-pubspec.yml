@@ -1,15 +1,12 @@
-name: Check and Update pubspec.yaml on Release Branch
+name: Update pubspec.yaml on Release Branch
 
 on:
   push:
     branches:
       - release
-  pull_request:
-    branches:
-      - release
 
 jobs:
-  check-and-update-pubspec:
+  update-pubspec:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,27 +18,17 @@ jobs:
       with:
         flutter-version: '3.3.0'
 
-    - name: Check and Update Dependencies in pubspec.yaml
+    - name: Update Dependencies to Release Branch
       run: |
-        # Replace specific dependency refs with their respective branches
-        sed -i 's/ref: [a-zA-Z0-9_-]* # coindcx_core/ref: develop # coindcx_core/g' pubspec.yaml
-        sed -i 's/ref: [a-zA-Z0-9_-]* # coindcx_ui_components/ref: release # coindcx_ui_components/g' pubspec.yaml
-        sed -i 's/ref: [a-zA-Z0-9_-]* # webview_dcx/ref: stable # webview_dcx/g' pubspec.yaml
-        sed -i 's/ref: [a-zA-Z0-9_-]* # ui_kit_dcx/ref: defi_release_new # ui_kit_dcx/g' pubspec.yaml
-        sed -i 's/ref: [a-zA-Z0-9_-]* # okto_mobile_sdk/ref: DS-377 # okto_mobile_sdk/g' pubspec.yaml
-        # Add more sed commands for other dependencies as needed
+        # Replace 'ref: <branch>' with 'ref: release' in pubspec.yaml
+        sed -i 's/ref: [a-zA-Z0-9_-]*/ref: release/g' pubspec.yaml
 
-    - name: Check for Changes
+    - name: Commit and push changes
       run: |
-        if [[ $(git status --porcelain) ]]; then
-          echo "Changes detected. Preparing to commit."
-          git config --local user.name "github-actions[bot]"
-          git config --local user.email "actions@github.com"
-          git add pubspec.yaml
-          git commit -m "Update dependencies to reference their specific branches"
-          git push
-        else
-          echo "No changes detected. Skipping commit."
-        fi
+        git config --local user.name "github-actions"
+        git config --local user.email "actions@github.com"
+        git add pubspec.yaml
+        git commit -m "Update dependencies to reference release branch"
+        git push
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
