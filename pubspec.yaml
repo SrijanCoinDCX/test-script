@@ -107,34 +107,34 @@ dependencies:
     git:
       url: git@github.com:coindcx-app/coindcx_feature_packages
       path: packages/webview_dcx
-      ref: develop
+      ref: release
 
   coindcx_core:
     #     path: ../coindcx_flutter_library
     git:
       url: git@github.com:coindcx-app/coindcx_flutter_library.git
-      ref: develop
+      ref: release
 
   coindcx_ui_components:
     #     path: ../uicomponents-service-mobile/coindcx_ui_components
     git:
       url: git@github.com:coindcx-app/mobile_uicomp_config_mobile.git
       path: coindcx_ui_components
-      ref: develop
+      ref: release
 
   ui_kit_dcx:
     #         path: ../ui_kit_dcx_mobile/packages/ui_kit_dcx
     git:
       url: git@github.com:coindcx-app/ui_kit_dcx_mobile.git
       path: packages/ui_kit_dcx
-      ref: defi_release_new
+      ref: release
 
   okto_mobile_sdk:
     #       path: ../defi-sdk/okto_mobile_sdk
     git:
       url: git@github.com:coindcx-app/defi-sdk.git
       path: okto_mobile_sdk
-      ref: develop
+      ref: release
 
 dependency_overrides:
   js: ^0.7.1 # due to conflict of socket_io_client and mixpanel_flutter
@@ -156,64 +156,64 @@ dependency_overrides:
   dcx_alice:
     git:
       url: git@github.com:coindcx-app/dcx-alice-mobile.git
-      ref: alice-web-api-logs
+      ref: release
 
   coindcx_di:
     #    path: ../coindcx_di
     git:
       url: git@github.com:coindcx-app/mobile_di_library.git
-      ref: master
+      ref: release
 
   coindcx_network:
     #      path: ../network_service_mobile
     git:
       url: git@github.com:coindcx-app/network-service-mobile.git
-      ref: develop
+      ref: release
   coindcx_core:
     #     path: ../coindcx_flutter_library
     git:
       url: git@github.com:coindcx-app/coindcx_flutter_library.git
-      ref: develop
+      ref: release
 
   coindcx_analytics:
     #     path: ../event-service-mobile
     git:
       url: git@github.com:coindcx-app/event-service-mobile.git
-      ref: develop
+      ref: release
 
   coindcx_ui_components:
     #     path: ../uicomponents-service-mobile/coindcx_ui_components
     git:
       url: git@github.com:coindcx-app/mobile_uicomp_config_mobile.git
       path: coindcx_ui_components
-      ref: develop
+      ref: release
 
   ui_kit_dcx:
     #         path: ../ui_kit_dcx_mobile/packages/ui_kit_dcx
     git:
       url: git@github.com:coindcx-app/ui_kit_dcx_mobile.git
       path: packages/ui_kit_dcx
-      ref: develop
+      ref: release
 
   stories_dcx:
     git:
       url: git@github.com:coindcx-app/engagement_engg_mobile_repo.git
       path: packages/stories_dcx
-      ref: defi_release
+      ref: release
 
   sockets_dcx:
     #     path: ../ui_kit_dcx_mobile/packages/sockets_dcx
     git:
       url: git@github.com:coindcx-app/ui_kit_dcx_mobile.git
       path: packages/sockets_dcx
-      ref: develop
+      ref: release
 
   webview_dcx:
     #path: ../coindcx_feature_packages/packages/webview_dcx
     git:
       url: git@github.com:coindcx-app/coindcx_feature_packages
       path: packages/webview_dcx
-      ref: develop
+      ref: release
 
 dev_dependencies:
   flutter_lints: ^1.0.4
