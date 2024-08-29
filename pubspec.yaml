@@ -186,7 +186,7 @@ dependency_overrides:
     git:
       url: git@github.com:coindcx-app/mobile_uicomp_config_mobile.git
       path: coindcx_ui_components
-      ref: release
+      ref: develop
 
   ui_kit_dcx:
     #         path: ../ui_kit_dcx_mobile/packages/ui_kit_dcx
