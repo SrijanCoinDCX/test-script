@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - release
+  pull_request:
+    branches:
+      - release
 
 jobs:
   update-pubspec:
@@ -21,14 +24,50 @@ jobs:
     - name: Update Dependencies to Release Branch
       run: |
         # Replace 'ref: <branch>' with 'ref: release' in pubspec.yaml
-        sed -i 's/ref: [a-zA-Z0-9_-]*/ref: release/g' pubspec.yaml
+        sed -i 's/ref: [^[:space:]]*/ref: release/g' pubspec.yaml
 
     - name: Commit and push changes
       run: |
         git config --local user.name "github-actions"
         git config --local user.email "actions@github.com"
         git add pubspec.yaml
-        git commit -m "Update dependencies to reference release branch"
-        git push
+
+        # Commit only if there are changes
+        if ! git diff-index --quiet HEAD; then
+          git commit -m "Update dependencies to reference release branch"
+          git push
+        fi
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Install dependencies
+      run: flutter pub get
+
+    - name: Analyze code
+      id: analyze
+      run: |
+        set +e  # Allow the script to continue even if there are errors
+        analyze_output=$(flutter analyze)
+        echo "$analyze_output"
+
+        # Count errors and warnings
+        error_count=$(echo "$analyze_output" | grep -o '• [0-9]\+ error' | grep -o '[0-9]\+')
+        warning_count=$(echo "$analyze_output" | grep -o '• [0-9]\+ warning' | grep -o '[0-9]\+')
+
+        echo "Error count: $error_count"
+        echo "Warning count: $warning_count"
+
+        # Set the outputs for the next step
+        echo "::set-output name=error_count::$error_count"
+        echo "::set-output name=warning_count::$warning_count"
+
+    - name: Check for errors
+      if: steps.analyze.outputs.error_count != '0'
+      run: |
+        echo "Errors detected: ${{ steps.analyze.outputs.error_count }}. Failing the build."
+        exit 1
+
+    - name: Report warnings
+      if: steps.analyze.outputs.error_count == '0'
+      run: |
+        echo "No errors found. Warnings: ${{ steps.analyze.outputs.warning_count }}"
