@@ -134,7 +134,7 @@ dependencies:
     git:
       url: git@github.com:coindcx-app/defi-sdk.git
       path: okto_mobile_sdk
-      ref: DS-377
+      ref: develop
 
 dependency_overrides:
   js: ^0.7.1 # due to conflict of socket_io_client and mixpanel_flutter
