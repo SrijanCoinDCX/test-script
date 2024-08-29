@@ -1,0 +1,34 @@
+name: Update pubspec.yaml on Release Branch
+
+on:
+  push:
+    branches:
+      - release
+
+jobs:
+  update-pubspec:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.3.0'
+
+    - name: Update Dependencies to Release Branch
+      run: |
+        # Replace 'ref: <branch>' with 'ref: release' in pubspec.yaml
+        sed -i 's/ref: [a-zA-Z0-9_-]*/ref: release/g' pubspec.yaml
+
+    - name: Commit and push changes
+      run: |
+        git config --local user.name "github-actions"
+        git config --local user.email "actions@github.com"
+        git add pubspec.yaml
+        git commit -m "Update dependencies to reference release branch"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
