@@ -21,19 +21,24 @@ jobs:
     - name: Update Dependencies to Specific Branches
       run: |
         # Replace specific dependency refs with their respective branches
-        sed -i 's/ref: [a-zA-Z0-9_-]* # coindcx_core/ref: develop/g' pubspec.yaml
-        sed -i 's/ref: [a-zA-Z0-9_-]* # coindcx_ui_components/ref: release/g' pubspec.yaml
-        sed -i 's/ref: [a-zA-Z0-9_-]* # webview_dcx/ref: stable/g' pubspec.yaml
-        sed -i 's/ref: [a-zA-Z0-9_-]* # ui_kit_dcx/ref: defi_release_new/g' pubspec.yaml
-        sed -i 's/ref: [a-zA-Z0-9_-]* # okto_mobile_sdk/ref: DS-377/g' pubspec.yaml
+        sed -i 's/ref: [a-zA-Z0-9_-]* # coindcx_core/ref: develop # coindcx_core/g' pubspec.yaml
+        sed -i 's/ref: [a-zA-Z0-9_-]* # coindcx_ui_components/ref: release # coindcx_ui_components/g' pubspec.yaml
+        sed -i 's/ref: [a-zA-Z0-9_-]* # webview_dcx/ref: stable # webview_dcx/g' pubspec.yaml
+        sed -i 's/ref: [a-zA-Z0-9_-]* # ui_kit_dcx/ref: defi_release_new # ui_kit_dcx/g' pubspec.yaml
+        sed -i 's/ref: [a-zA-Z0-9_-]* # okto_mobile_sdk/ref: DS-377 # okto_mobile_sdk/g' pubspec.yaml
         # Add more sed commands for other dependencies as needed
 
-    - name: Commit and push changes
+    - name: Check for changes
       run: |
-        git config --local user.name "github-actions"
-        git config --local user.email "actions@github.com"
-        git add pubspec.yaml
-        git commit -m "Update dependencies to reference their specific branches"
-        git push
+        if [[ $(git status --porcelain) ]]; then
+          echo "Changes detected. Preparing to commit."
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "actions@github.com"
+          git add pubspec.yaml
+          git commit -m "Update dependencies to reference their specific branches"
+          git push
+        else
+          echo "No changes detected. Skipping commit."
+        fi
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
