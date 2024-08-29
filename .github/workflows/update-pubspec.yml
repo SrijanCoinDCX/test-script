@@ -18,17 +18,22 @@ jobs:
       with:
         flutter-version: '3.3.0'
 
-    - name: Update Dependencies to Release Branch
+    - name: Update Dependencies to Specific Branches
       run: |
-        # Replace 'ref: <branch>' with 'ref: release' in pubspec.yaml
-        sed -i 's/ref: [a-zA-Z0-9_-]*/ref: release/g' pubspec.yaml
+        # Replace specific dependency refs with their respective branches
+        sed -i 's/ref: [a-zA-Z0-9_-]* # coindcx_core/ref: develop/g' pubspec.yaml
+        sed -i 's/ref: [a-zA-Z0-9_-]* # coindcx_ui_components/ref: release/g' pubspec.yaml
+        sed -i 's/ref: [a-zA-Z0-9_-]* # webview_dcx/ref: stable/g' pubspec.yaml
+        sed -i 's/ref: [a-zA-Z0-9_-]* # ui_kit_dcx/ref: defi_release_new/g' pubspec.yaml
+        sed -i 's/ref: [a-zA-Z0-9_-]* # okto_mobile_sdk/ref: DS-377/g' pubspec.yaml
+        # Add more sed commands for other dependencies as needed
 
     - name: Commit and push changes
       run: |
-        git config --local user.name "github-actions"
+        git config --local user.name "github-actions[bot]"
         git config --local user.email "actions@github.com"
         git add pubspec.yaml
-        git commit -m "Update dependencies to reference release branch"
+        git commit -m "Update dependencies to reference their specific branches"
         git push
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
