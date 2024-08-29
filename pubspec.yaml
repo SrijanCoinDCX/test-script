@@ -193,7 +193,7 @@ dependency_overrides:
     git:
       url: git@github.com:coindcx-app/ui_kit_dcx_mobile.git
       path: packages/ui_kit_dcx
-      ref: release
+      ref: develop
 
   stories_dcx:
     git:
