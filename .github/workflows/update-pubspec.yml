@@ -1,12 +1,15 @@
-name: Update pubspec.yaml on Release Branch
+name: Check and Update pubspec.yaml on Release Branch
 
 on:
   push:
     branches:
       - release
+  pull_request:
+    branches:
+      - release
 
 jobs:
-  update-pubspec:
+  check-and-update-pubspec:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,7 +21,7 @@ jobs:
       with:
         flutter-version: '3.3.0'
 
-    - name: Update Dependencies to Specific Branches
+    - name: Check and Update Dependencies in pubspec.yaml
       run: |
         # Replace specific dependency refs with their respective branches
         sed -i 's/ref: [a-zA-Z0-9_-]* # coindcx_core/ref: develop # coindcx_core/g' pubspec.yaml
@@ -28,7 +31,7 @@ jobs:
         sed -i 's/ref: [a-zA-Z0-9_-]* # okto_mobile_sdk/ref: DS-377 # okto_mobile_sdk/g' pubspec.yaml
         # Add more sed commands for other dependencies as needed
 
-    - name: Check for changes
+    - name: Check for Changes
       run: |
         if [[ $(git status --porcelain) ]]; then
           echo "Changes detected. Preparing to commit."
