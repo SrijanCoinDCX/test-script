@@ -1,66 +1,50 @@
-// Abstractions
-abstract class UserRepository {
-  void saveUser(User user);
-}
+import 'dart:convert';
+import 'dart:io';
 
-abstract class NotificationService {
-  void sendNotification(String message);
-}
-
-// Concrete implementations
-class DatabaseUserRepository implements UserRepository {
-  @override
-  void saveUser(User user) {
-    print('Saving user ${user.userName} to the database.');
-    // Implement actual database save logic
-  }
-}
-
-class EmailNotificationService implements NotificationService {
-  @override
-  void sendNotification(String message) {
-    print('Sending email notification: $message');
-    // Implement actual email sending logic
-  }
-}
-
-// User model class with single responsibility
-class User {
-  final String userName;
-  final String email;
-
-  User(this.userName, this.email);
-}
-
-// UserManager class that adheres to SOLID principles
+// A class that violates SOLID principles
 class UserManager {
-  final UserRepository userRepository;
-  final NotificationService notificationService;
+  final String filePath;
 
-  UserManager(this.userRepository, this.notificationService);
+  UserManager(this.filePath);
 
-  void registerUser(String userName, String email) {
-    var user = User(userName, email);
-    userRepository.saveUser(user);
-    notificationService.sendNotification('Welcome $userName!');
+  // Single Responsibility Principle violation: Managing user data and file operations
+  void addUser(String userName) {
+    var users = _readUsers();
+    users.add(userName);
+    _writeUsers(users);
   }
 
-  void updateUserEmail(User user, String newEmail) {
-    // Logic to update user email
-    print('Updating email for user ${user.userName} to $newEmail');
-    notificationService
-        .sendNotification('Your email has been updated to $newEmail');
+  void removeUser(String userName) {
+    var users = _readUsers();
+    users.remove(userName);
+    _writeUsers(users);
   }
-}
 
-void main() {
-  // Dependency injection
-  var userRepository = DatabaseUserRepository();
-  var notificationService = EmailNotificationService();
+  List<String> listUsers() {
+    return _readUsers();
+  }
 
-  var userManager = UserManager(userRepository, notificationService);
+  // Encapsulates file operations but it's mixed with user management
+  List<String> _readUsers() {
+    try {
+      final file = File(filePath);
+      if (!file.existsSync()) {
+        return [];
+      }
+      final content = file.readAsStringSync();
+      return LineSplitter.split(content).toList();
+    } catch (e) {
+      print('Error reading file: $e');
+      return [];
+    }
+  }
 
-  userManager.registerUser('john_doe', 'john@example.com');
-  var user = User('john_doe', 'john@example.com');
-  userManager.updateUserEmail(user, 'john.doe@example.com');
+  void _writeUsers(List<String> users) {
+    try {
+      final file = File(filePath);
+      file.writeAsStringSync(users.join('\n'));
+    } catch (e) {
+      print('Error writing file: $e');
+    }
+  }
 }
