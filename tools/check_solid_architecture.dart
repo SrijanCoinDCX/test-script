@@ -16,7 +16,8 @@ void main() {
     final lines = File(file.path).readAsLinesSync();
 
     // Check for class size and single responsibility violations
-    if (_checkClassSize(file.path, lines) || _checkSingleResponsibility(file.path, lines)) {
+    if (_checkClassSize(file.path, lines) ||
+        _checkSingleResponsibility(file.path, lines)) {
       hasErrors = true; // Set error flag if any check fails
     }
   }
@@ -24,7 +25,7 @@ void main() {
   // Exit with an error code if any violations were found
   if (hasErrors) {
     print('Code checks failed. Please address the warnings.');
-    exit(1);
+    exit(1); // Non-zero exit code to indicate errors
   } else {
     print('All checks passed.');
   }
@@ -32,57 +33,74 @@ void main() {
 
 bool _checkClassSize(String path, List<String> lines) {
   int classLineCount = 0;
+  int braceDepth = 0; // To track the depth of curly braces
   bool inClass = false;
-  bool hasViolation = false;
-
+  bool hasLargeClass = false; // Initialize to track if any class exceeds 300 lines
   for (final line in lines) {
-    if (line.contains('class ')) {
+    if (line.contains(RegExp(r'\bclass\b'))) {
+      // Check for 'class' keyword (matches whole word only)
       inClass = true;
+      classLineCount = 0; // Reset line count for new class
     }
-
     if (inClass) {
       classLineCount++;
-      if (line.contains('}')) {
+      // Update brace depth based on the number of '{' and '}'
+      braceDepth += '{'.allMatches(line).length;
+      braceDepth -= '}'.allMatches(line).length;
+      // If braceDepth returns to 0, we've exited the class scope
+      if (braceDepth == 0 && classLineCount > 0) {
         inClass = false;
-
         if (classLineCount > 300) {
-          print('Error: Class in $path exceeds 300 lines.');
-          hasViolation = true;
+          print('Warning: Class in $path exceeds 300 lines.');
+          hasLargeClass = true; // Set to true if any class exceeds the limit
         }
-
         classLineCount = 0; // Reset for next class
       }
     }
   }
-
-  return hasViolation;
+  return hasLargeClass; // Return whether any class exceeded the line limit
 }
 
 bool _checkSingleResponsibility(String path, List<String> lines) {
-  int methodCount = 0;
-  bool inClass = false;
-  bool hasViolation = false;
-
+  int methodCount = 0;   // Counts the number of methods in the current class
+  int braceDepth = 0;    // Tracks the depth of curly braces to identify the class scope
+  bool inClass = false;  // Indicates whether the parser is currently inside a class
+  bool hasMultipleResponsibilities = false;  // Flag to indicate if a class violates SRP
   for (final line in lines) {
-    if (line.contains('class ')) {
-      inClass = true;
+    // Check for the 'class' keyword to identify the start of a class definition
+    if (line.contains(RegExp(r'\bclass\b'))) {
+      inClass = true;    // We are inside a class now
+      methodCount = 0;   // Reset method count for the new class
+      braceDepth = 0;    // Reset brace depth for the new class
     }
-
-    if (inClass && line.contains('void ')) {
-      methodCount++;
-    }
-
-    if (inClass && line.contains('}')) {
-      inClass = false;
-
-      if (methodCount > 10) { // Simple heuristic
-        print('Error: Class in $path might have multiple responsibilities.');
-        hasViolation = true;
+    if (inClass) {
+      // Update brace depth based on the number of '{' and '}' in the line
+      braceDepth += '{'.allMatches(line).length;
+      braceDepth -= '}'.allMatches(line).length;
+      // Check for methods using a regex to match typical Dart method signatures
+      if (line.contains(RegExp(r'\b(?:void|int|double|String|bool|List|Map|Set|Future|Stream|[\w<>, ]+)\s+\w+\s*\('))) {
+        methodCount++;   // Increment the method count
       }
-
-      methodCount = 0; // Reset for next class
+      // If braceDepth is zero, we've exited the current class scope
+      if (braceDepth == 0 && inClass) {
+        inClass = false;   // We are no longer inside a class
+        // Check if the method count exceeds the threshold for SRP
+        if (methodCount > 10) { // Simple heuristic for SRP
+          print('Warning: Class in $path might have multiple responsibilities.');
+          hasMultipleResponsibilities = true;  // Set flag indicating a potential SRP violation
+        }
+        methodCount = 0;  // Reset method count for the next class
+      }
     }
   }
-
-  return hasViolation;
+  return hasMultipleResponsibilities;  // Return true if any class violates SRP, otherwise false
 }
+
+
+
+
+
+
+
+
+
