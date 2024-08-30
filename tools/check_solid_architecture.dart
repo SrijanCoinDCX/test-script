@@ -14,6 +14,8 @@ final Map<String, String> solidPatterns = {
       r'new\s+\w+\(', // Direct instantiation of objects
 };
 
+const int maxLinesPerClass = 300;
+
 void main() {
   final dir = Directory.current;
   final dartFiles = dir.listSync(recursive: true).where((file) =>
@@ -21,17 +23,31 @@ void main() {
       !file.path.contains('/.dart_tool/') &&
       !file.path.contains('/test/'));
 
-  print('Checking SOLID principles in Dart files...');
+  print('Checking SOLID principles and class length in Dart files...');
 
   for (final file in dartFiles) {
     final content = File(file.path).readAsStringSync();
+    
+    // Check for SOLID principles violations
     for (final principle in solidPatterns.keys) {
       final pattern = RegExp(solidPatterns[principle]!);
       if (pattern.hasMatch(content)) {
         print('Potential $principle violation in ${file.path}');
       }
     }
+
+    // Check for class length
+    final classPattern = RegExp(r'class\s+\w+\s*{([^}]*)}', dotAll: true);
+    final matches = classPattern.allMatches(content);
+    
+    for (final match in matches) {
+      final classContent = match.group(1) ?? '';
+      final lineCount = classContent.split('\n').length;
+      if (lineCount > maxLinesPerClass) {
+        print('Class in ${file.path} exceeds $maxLinesPerClass lines (actual: $lineCount lines)');
+      }
+    }
   }
 
-  print('SOLID principles check completed.');
+  print('SOLID principles and class length check completed.');
 }
