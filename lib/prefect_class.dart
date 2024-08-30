@@ -48,7 +48,8 @@ class UserManager {
   void updateUserEmail(User user, String newEmail) {
     // Logic to update user email
     print('Updating email for user ${user.userName} to $newEmail');
-    notificationService.sendNotification('Your email has been updated to $newEmail');
+    notificationService
+        .sendNotification('Your email has been updated to $newEmail');
   }
 }
 
