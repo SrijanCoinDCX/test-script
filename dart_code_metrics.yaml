@@ -1,0 +1,17 @@
+metrics:
+  cyclomatic-complexity: 10
+  lines-of-code: 100
+  number-of-arguments: 4
+  maximum-nesting-level: 5
+  weight-of-class: 50
+
+rules:
+  - avoid-long-functions
+  - prefer-single-responsibility
+  - no-equal-arguments
+  - no-magic-number
+  - prefer-trailing-comma
+  - avoid-nested-conditional-expressions
+  - avoid-unused-parameters
+  - avoid-throw-in-catch-block
+  - avoid-non-null-assertion
