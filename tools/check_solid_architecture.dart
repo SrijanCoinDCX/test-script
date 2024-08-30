@@ -35,7 +35,8 @@ bool _checkClassSize(String path, List<String> lines) {
   int classLineCount = 0;
   int braceDepth = 0; // To track the depth of curly braces
   bool inClass = false;
-  bool hasLargeClass = false; // Initialize to track if any class exceeds 300 lines
+  bool hasLargeClass =
+      false; // Initialize to track if any class exceeds 300 lines
   for (final line in lines) {
     if (line.contains(RegExp(r'\bclass\b'))) {
       // Check for 'class' keyword (matches whole word only)
@@ -62,45 +63,43 @@ bool _checkClassSize(String path, List<String> lines) {
 }
 
 bool _checkSingleResponsibility(String path, List<String> lines) {
-  int methodCount = 0;   // Counts the number of methods in the current class
-  int braceDepth = 0;    // Tracks the depth of curly braces to identify the class scope
-  bool inClass = false;  // Indicates whether the parser is currently inside a class
-  bool hasMultipleResponsibilities = false;  // Flag to indicate if a class violates SRP
+  int methodCount = 0; // Counts the number of methods in the current class
+  int braceDepth =
+      0; // Tracks the depth of curly braces to identify the class scope
+  bool inClass =
+      false; // Indicates whether the parser is currently inside a class
+  bool hasMultipleResponsibilities =
+      false; // Flag to indicate if a class violates SRP
   for (final line in lines) {
     // Check for the 'class' keyword to identify the start of a class definition
     if (line.contains(RegExp(r'\bclass\b'))) {
-      inClass = true;    // We are inside a class now
-      methodCount = 0;   // Reset method count for the new class
-      braceDepth = 0;    // Reset brace depth for the new class
+      inClass = true; // We are inside a class now
+      methodCount = 0; // Reset method count for the new class
+      braceDepth = 0; // Reset brace depth for the new class
     }
     if (inClass) {
       // Update brace depth based on the number of '{' and '}' in the line
       braceDepth += '{'.allMatches(line).length;
       braceDepth -= '}'.allMatches(line).length;
       // Check for methods using a regex to match typical Dart method signatures
-      if (line.contains(RegExp(r'\b(?:void|int|double|String|bool|List|Map|Set|Future|Stream|[\w<>, ]+)\s+\w+\s*\('))) {
-        methodCount++;   // Increment the method count
+      if (line.contains(RegExp(
+          r'\b(?:void|int|double|String|bool|List|Map|Set|Future|Stream|[\w<>, ]+)\s+\w+\s*\('))) {
+        methodCount++; // Increment the method count
       }
       // If braceDepth is zero, we've exited the current class scope
       if (braceDepth == 0 && inClass) {
-        inClass = false;   // We are no longer inside a class
+        inClass = false; // We are no longer inside a class
         // Check if the method count exceeds the threshold for SRP
-        if (methodCount > 10) { // Simple heuristic for SRP
-          print('Warning: Class in $path might have multiple responsibilities.');
-          hasMultipleResponsibilities = true;  // Set flag indicating a potential SRP violation
+        if (methodCount > 10) {
+          // Simple heuristic for SRP
+          print(
+              'Warning: Class in $path might have multiple responsibilities.');
+          hasMultipleResponsibilities =
+              true; // Set flag indicating a potential SRP violation
         }
-        methodCount = 0;  // Reset method count for the next class
+        methodCount = 0; // Reset method count for the next class
       }
     }
   }
-  return hasMultipleResponsibilities;  // Return true if any class violates SRP, otherwise false
+  return hasMultipleResponsibilities; // Return true if any class violates SRP, otherwise false
 }
-
-
-
-
-
-
-
-
-
