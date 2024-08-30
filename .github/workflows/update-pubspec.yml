@@ -45,9 +45,9 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Install dependencies
-      run: |
-        flutter pub get || (echo "pub get failed, running pub upgrade..." && flutter pub upgrade)
+    # - name: Install dependencies
+    #   run: |
+    #     flutter pub get || (echo "pub get failed, running pub upgrade..." && flutter pub upgrade)
 
     - name: Analyze code
       id: analyze
