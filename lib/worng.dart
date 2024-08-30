@@ -281,7 +281,7 @@ class MessyUserManager {
   void trackUserActivity(String activity) {
     recentActivities.add(activity);
     print('Tracking user activity: $activity');
-    logs.add('User activity tracked: $activity');
+    logs.add('User activity tracked: $activity check');
   }
 
   void notifyAdmin(String message) {

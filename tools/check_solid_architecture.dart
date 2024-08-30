@@ -1,53 +1,61 @@
 import 'dart:io';
-
-// Define basic patterns for potential SOLID principle violations
-final Map<String, String> solidPatterns = {
-  'Single Responsibility Principle':
-      r'class\s+\w+\s*{.*(void\s+\w+\(.*\)\s*{){2,}', // Multiple methods in one class
-  'Open/Closed Principle':
-      r'class\s+\w+\s*{.*}', // Detect classes but only alerts for possible modifications
-  'Liskov Substitution Principle':
-      r'(extends|implements)\s+\w+', // Checks for inheritance
-  'Interface Segregation Principle':
-      r'class\s+\w+\s*implements\s+\w+', // Checks for multiple interface implementations
-  'Dependency Inversion Principle':
-      r'new\s+\w+\(', // Direct instantiation of objects
-};
-
-const int maxLinesPerClass = 300;
-
 void main() {
-  final dir = Directory.current;
-  final dartFiles = dir.listSync(recursive: true).where((file) =>
-      file.path.endsWith('.dart') &&
-      !file.path.contains('/.dart_tool/') &&
-      !file.path.contains('/test/'));
-
-  print('Checking SOLID principles and class length in Dart files...');
-
+  // Directory to start searching for Dart files
+  final directory = Directory('lib');
+  // Recursively list all Dart files in the 'lib' directory
+  final dartFiles = directory
+      .listSync(recursive: true)
+      .where((entity) => entity.path.endsWith('.dart'))
+      .toList();
   for (final file in dartFiles) {
-    final content = File(file.path).readAsStringSync();
-    
-    // Check for SOLID principles violations
-    for (final principle in solidPatterns.keys) {
-      final pattern = RegExp(solidPatterns[principle]!);
-      if (pattern.hasMatch(content)) {
-        print('Potential $principle violation in ${file.path}');
-      }
+    final lines = File(file.path).readAsLinesSync();
+    // Example check: Class should not have more than 300 lines of code
+    _checkClassSize(file.path, lines);
+    // Example check: Class should have only one responsibility (simple heuristic)
+    _checkSingleResponsibility(file.path, lines);
+  }
+}
+void _checkClassSize(String path, List<String> lines) {
+  int classLineCount = 0;
+  bool inClass = false;
+  for (final line in lines) {
+    if (line.contains('class ')) {
+      inClass = true;
     }
-
-    // Check for class length
-    final classPattern = RegExp(r'class\s+\w+\s*{([^}]*)}', dotAll: true);
-    final matches = classPattern.allMatches(content);
-    
-    for (final match in matches) {
-      final classContent = match.group(1) ?? '';
-      final lineCount = classContent.split('\n').length;
-      if (lineCount > maxLinesPerClass) {
-        print('Class in ${file.path} exceeds $maxLinesPerClass lines (actual: $lineCount lines)');
+    if (inClass) {
+      classLineCount++;
+      if (line.contains('}')) {
+        inClass = false;
+        if (classLineCount > 300) {
+          print('Warning: Class in $path exceeds 300 lines.');
+        }
+        classLineCount = 0; // Reset for next class
       }
     }
   }
-
-  print('SOLID principles and class length check completed.');
 }
+void _checkSingleResponsibility(String path, List<String> lines) {
+  int methodCount = 0;
+  bool inClass = false;
+  for (final line in lines) {
+    if (line.contains('class ')) {
+      inClass = true;
+    }
+    if (inClass && line.contains('void ')) {
+      methodCount++;
+    }
+    if (inClass && line.contains('}')) {
+      inClass = false;
+      if (methodCount > 10) { // Simple heuristic
+        print('Warning: Class in $path might have multiple responsibilities.');
+      }
+      methodCount = 0; // Reset for next class
+    }
+  }
+}
+
+
+
+
+
+
