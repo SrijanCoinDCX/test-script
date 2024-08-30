@@ -75,7 +75,8 @@ class MessyUserManager {
   }
 
   void saveUserData() {
-    var database = DatabaseConnection(); // Tight coupling with DatabaseConnection
+    var database =
+        DatabaseConnection(); // Tight coupling with DatabaseConnection
     database.save(userName, password, email, phoneNumber);
     logs.add('User data saved');
   }
@@ -289,7 +290,8 @@ class MessyUserManager {
     logs.add('Admin notified with message: $message');
   }
 
-  void createUser(String userName, String password, String email, String phoneNumber) {
+  void createUser(
+      String userName, String password, String email, String phoneNumber) {
     print('Creating user with name: $userName');
     // Simulate user creation
     logs.add('User created: $userName');
@@ -333,14 +335,17 @@ class MessyUserManager {
 
 // Simulates a tightly coupled dependency
 class DatabaseConnection {
-  void save(String username, String password, String email, String phoneNumber) {
-    print('Saving $username with password $password, email $email, phone $phoneNumber to the database.');
+  void save(
+      String username, String password, String email, String phoneNumber) {
+    print(
+        'Saving $username with password $password, email $email, phone $phoneNumber to the database.');
   }
 }
 
 void main() {
   // Creating and using the messy class
-  var userManager = MessyUserManager('admin', 'password', 'admin@example.com', '555-1234');
+  var userManager =
+      MessyUserManager('admin', 'password', 'admin@example.com', '555-1234');
   userManager.login();
   userManager.displayUser();
   userManager.addRole('admin');
@@ -367,12 +372,14 @@ void main() {
   userManager.printLogs();
   userManager.writeLogsToFile();
   userManager.readLogsFromFile();
-  userManager.scheduleEmail('Reminder', 'Don\'t forget your appointment!', DateTime.now().add(Duration(days: 1)));
+  userManager.scheduleEmail('Reminder', 'Don\'t forget your appointment!',
+      DateTime.now().add(Duration(days: 1)));
   userManager.asyncFetchDataFromAPI('https://api.example.com/async-data');
   userManager.archiveOldLogs();
   userManager.performDataCleanup();
   userManager.runScheduledTasks();
-  userManager.saveUserPreferences({'theme': 'dark', 'notifications': 'enabled'});
+  userManager
+      .saveUserPreferences({'theme': 'dark', 'notifications': 'enabled'});
   userManager.loadUserPreferences();
   userManager.integrateWithThirdPartyService('PaymentGateway');
   userManager.checkForUpdates();
@@ -382,7 +389,8 @@ void main() {
   userManager.scheduleBackup(DateTime.now().add(Duration(days: 7)));
   userManager.trackUserActivity('User logged in');
   userManager.notifyAdmin('System alert: High CPU usage detected');
-  userManager.createUser('newUser', 'newPassword', 'newuser@example.com', '555-6789');
+  userManager.createUser(
+      'newUser', 'newPassword', 'newuser@example.com', '555-6789');
   userManager.deleteUser('oldUser');
   userManager.processBulkData(['data1', 'data2', 'data3']);
   userManager.simulateLongRunningTask();
