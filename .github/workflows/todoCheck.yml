@@ -1,0 +1,66 @@
+name: Check For TODO
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - release
+
+jobs:
+  code_quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Fetch the base branch
+      - name: Fetch base branch
+        run: git fetch origin ${{ github.base_ref }}
+
+      # Set up Flutter environment
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.6'
+
+      # Install dependencies
+      - name: Install dependencies
+        run: flutter pub get
+
+      # Check for TODO Comments in Changed Dart Files
+      - name: Check for TODO Comments in Changed Dart Files
+        run: |
+          echo "Checking for TODO comments in changed Dart files..."
+
+          # Fetch both the base and head branches
+          git fetch origin ${{ github.base_ref }} ${{ github.head_ref }}
+
+          # Get a list of changed Dart files in the PR
+          CHANGED_DART_FILES=$(git diff --name-only --diff-filter=AMR origin/${{ github.base_ref }}...${{ github.head_ref }} | grep -E '\.dart$')
+
+          if [ -z "$CHANGED_DART_FILES" ]; then
+            echo "No changed Dart files to check for TODOs."
+            exit 0
+          fi
+
+          # Initialize a variable to track files with TODOs
+          TODO_FILES=""
+
+          # Loop through changed Dart files to find TODO comments
+          for file in $CHANGED_DART_FILES; do
+            if grep -q "TODO" "$file"; then
+              TODO_FILES="$TODO_FILES\n$file"
+            fi
+          done
+
+          # Report files with TODO comments or indicate that none were found
+          if [ -n "$TODO_FILES" ]; then
+            echo "TODO comments found in the following Dart files:"
+            echo -e "$TODO_FILES"
+            exit 1  # Exit with failure if TODO comments are found
+          else
+            echo "No TODO comments found in changed Dart files."
+          fi
