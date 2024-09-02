@@ -1,4 +1,6 @@
 // Abstractions
+import 'package:flutter/material.dart';
+
 abstract class UserRepository {
   void saveUser(User user);
 }
@@ -11,7 +13,7 @@ abstract class NotificationService {
 class DatabaseUserRepository implements UserRepository {
   @override
   void saveUser(User user) {
-    print('Saving user ${user.userName} to the database.');
+    debugPrint('Saving user ${user.userName} to the database.');
     // Implement actual database save logic
   }
 }
@@ -19,7 +21,7 @@ class DatabaseUserRepository implements UserRepository {
 class EmailNotificationService implements NotificationService {
   @override
   void sendNotification(String message) {
-    print('Sending email notification: $message');
+    debugPrint('Sending email notification: $message');
     // Implement actual email sending logic
   }
 }
@@ -47,7 +49,7 @@ class UserManager {
 
   void updateUserEmail(User user, String newEmail) {
     // Logic to update user email
-    print('Updating email for user ${user.userName} to $newEmail');
+    debugPrint('Updating email for user ${user.userName} to $newEmail');
     notificationService
         .sendNotification('Your email has been updated to $newEmail');
   }
