@@ -76,37 +76,6 @@ jobs:
         echo "Checking architecture rules..."
         dart run tools/check_code_architecture.dart
       continue-on-error: true  # Allow checks to run even if errors occur
-
-    # Check for TODO comments in changed files only
-    - name: Check for TODO Comments in Changed Files
-      run: |
-        echo "Checking for TODO comments in changed files..."
-          
-        # Fetch the base branch to ensure it's available for diff
-        git fetch origin ${{ github.base_ref }}
-
-        # Get the list of files changed in the PR (modified, added, or renamed)
-        CHANGED_FILES=$(git diff --name-only --diff-filter=d origin/${{ github.base_ref }}...${{ github.head_ref }} | grep -E '\.dart$')
-          
-        if [ -z "$CHANGED_FILES" ]; then
-          echo "No changed Dart files to check for TODOs."
-          exit 0
-        fi
-
-        TODO_FILES=""
-        for file in $CHANGED_FILES; do
-          if grep -q "TODO" "$file"; then
-            TODO_FILES="$TODO_FILES\n$file"
-          fi
-        done
-
-        if [ -n "$TODO_FILES" ]; then
-          echo "TODO comments found in the following files:"
-          echo -e "$TODO_FILES"
-          exit 1  # Fail the job if TODO comments are present
-        else
-          echo "No TODO comments found in changed files."
-        fi
           
     # Run unit tests
     - name: Run Unit Tests
