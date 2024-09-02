@@ -39,7 +39,7 @@ jobs:
           git fetch origin ${{ github.base_ref }} ${{ github.head_ref }}
 
           # Get a list of changed Dart files in the PR
-          CHANGED_DART_FILES=$(git diff --name-only --diff-filter=AMR origin/${{ github.base_ref }}...${{ github.head_ref }} | grep -E '\.dart$')
+          CHANGED_DART_FILES=$(git diff --name-only --diff-filter=AMR origin/${{ github.base_ref }}...origin/${{ github.head_ref }} -- | grep -E '\.dart$')
 
           if [ -z "$CHANGED_DART_FILES" ]; then
             echo "No changed Dart files to check for TODOs."
