@@ -1,23 +1,28 @@
 import 'dart:io';
 
 void main() {
-  // Directory to start searching for Dart files
-  final directory = Directory('lib');
+  // Get the list of staged files
+  final result = Process.runSync('git', ['diff', '--cached', '--name-only']);
+  final stagedFiles = result.stdout.toString().split('\n');
 
-  // Recursively list all Dart files in the 'lib' directory
-  final dartFiles = directory
-      .listSync(recursive: true)
-      .where((entity) => entity.path.endsWith('.dart'))
+  // Filter the list to include only Dart files in the 'lib' directory
+  final dartFiles = stagedFiles
+      .where((file) => file.startsWith('lib/') && file.endsWith('.dart'))
       .toList();
+
+  if (dartFiles.isEmpty) {
+    _logSuccess('✔ No Dart files in the lib directory are staged for commit.');
+    return;
+  }
 
   bool hasErrors = false; // Track if any errors were found
 
   for (final file in dartFiles) {
-    final lines = File(file.path).readAsLinesSync();
+    final lines = File(file).readAsLinesSync();
 
     // Check for class size and single responsibility violations
-    if (_checkClassSize(file.path, lines) ||
-        _checkSingleResponsibility(file.path, lines)) {
+    if (_checkClassSize(file, lines) ||
+        _checkSingleResponsibility(file, lines)) {
       hasErrors = true; // Set error flag if any check fails
     }
   }
