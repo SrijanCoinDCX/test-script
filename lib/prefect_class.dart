@@ -11,7 +11,7 @@ abstract class NotificationService {
 class DatabaseUserRepository implements UserRepository {
   @override
   void saveUser(User user) {
-      print('Saving user ${user.userName} to the database.');
+    print('Saving user ${user.userName} to the database.');
     // Implement actual database save logic
   }
 }
@@ -20,14 +20,14 @@ class EmailNotificationService implements NotificationService {
   @override
   void sendNotification(String message) {
     print('Sending email notification: $message');
-      // Implement actual email sending logic
+    // Implement actual email sending logic
   }
 }
 
 // User model class with single responsibility
 class User {
   final String userName;
-    final String email;
+  final String email;
 
   User(this.userName, this.email);
 }
@@ -42,7 +42,7 @@ class UserManager {
   void registerUser(String userName, String email) {
     var user = User(userName, email);
     userRepository.saveUser(user);
-      notificationService.sendNotification('Welcome $userName!');
+    notificationService.sendNotification('Welcome $userName!');
   }
 
   void updateUserEmail(User user, String newEmail) {
