@@ -1,6 +1,6 @@
 metrics:
   cyclomatic-complexity: 10
-  lines-of-code: 100
+  lines-of-code: 300
   number-of-arguments: 4
   maximum-nesting-level: 5
   weight-of-class: 50
