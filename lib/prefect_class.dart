@@ -7,6 +7,7 @@ abstract class UserRepository {
 
 abstract class NotificationService {
   void sendNotification(String message);
+  // TODO: testing todo detection
 }
 
 // Concrete implementations

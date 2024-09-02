@@ -24,10 +24,10 @@ void main() {
 
   // Exit with an error code if any violations were found
   if (hasErrors) {
-    print('Code checks failed. Please address the warnings.');
+    _logError('✘ Code checks failed. Please address the warnings.');
     exit(1); // Non-zero exit code to indicate errors
   } else {
-    print('All checks passed.');
+    _logSuccess('✔ All checks passed.');
   }
 }
 
@@ -52,12 +52,15 @@ bool _checkClassSize(String path, List<String> lines) {
       if (braceDepth == 0 && classLineCount > 0) {
         inClass = false;
         if (classLineCount > 300) {
-          print('Warning: Class in $path exceeds 300 lines.');
+          _logWarning('✘ Warning: Class in $path exceeds 300 lines.');
           hasLargeClass = true; // Set to true if any class exceeds the limit
         }
         classLineCount = 0; // Reset for next class
       }
     }
+  }
+  if (!hasLargeClass) {
+    _logSuccess('✔ No large class found in $path.');
   }
   return hasLargeClass; // Return whether any class exceeded the line limit
 }
@@ -92,8 +95,8 @@ bool _checkSingleResponsibility(String path, List<String> lines) {
         // Check if the method count exceeds the threshold for SRP
         if (methodCount > 10) {
           // Simple heuristic for SRP
-          print(
-              'Warning: Class in $path might have multiple responsibilities.');
+          _logWarning(
+              '✘ Warning: Class in $path might have multiple responsibilities.');
           hasMultipleResponsibilities =
               true; // Set flag indicating a potential SRP violation
         }
@@ -101,5 +104,20 @@ bool _checkSingleResponsibility(String path, List<String> lines) {
       }
     }
   }
+  if (!hasMultipleResponsibilities) {
+    _logSuccess('✔ No SRP violations found in $path.');
+  }
   return hasMultipleResponsibilities; // Return true if any class violates SRP, otherwise false
+}
+
+void _logSuccess(String message) {
+  stdout.writeln('\x1B[32m$message\x1B[0m'); // Green text
+}
+
+void _logWarning(String message) {
+  stdout.writeln('\x1B[33m$message\x1B[0m'); // Yellow text
+}
+
+void _logError(String message) {
+  stdout.writeln('\x1B[31m$message\x1B[0m'); // Red text
 }
