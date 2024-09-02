@@ -74,7 +74,10 @@ jobs:
     - name: Check Code Architecture
       run: |
         echo "Checking architecture rules..."
-        dart run tools/check_code_architecture.dart
+        dart run tools/pr_code_architecture.dart
+      env:
+        GITHUB_BASE_REF: ${{ github.event.pull_request.base.ref }}
+        GITHUB_HEAD_REF: ${{ github.event.pull_request.head.ref }}
       continue-on-error: true  # Allow checks to run even if errors occur
           
     # Run unit tests
