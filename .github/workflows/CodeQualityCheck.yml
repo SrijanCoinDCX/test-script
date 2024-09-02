@@ -1,0 +1,99 @@
+name: Code Quality Checks
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - release
+
+jobs:
+  code_quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+    # Checkout the repository
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Set up Flutter
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: 'stable' # or specify a version
+
+    # Install dependencies
+    - name: Install dependencies
+      run: flutter pub get
+
+    # Run dart format check on all files
+    - name: Dart Format Check
+      run: |
+        echo "Checking dart format..."
+        if ! dart format --set-exit-if-changed .; then
+          echo "Code is not properly formatted. Running dart format."
+          dart format -o write .
+          git add .
+          git commit -m "Auto-format code for PR" || echo "No formatting changes to commit."
+        else
+          echo "All files are properly formatted."
+        fi
+
+    # Run dart fix
+    - name: Dart Fix
+      run: |
+        echo "Running dart fix..."
+        if ! dart fix --apply; then
+          echo "Dart fix applied changes."
+          git add .
+          git commit -m "Auto-applied dart fixes" || echo "No fixes applied."
+        else
+          echo "No fixes needed."
+        fi
+
+    # Run flutter analyze
+    - name: Flutter Analyze
+      run: |
+        echo "Running flutter analyze..."
+        flutter analyze
+      continue-on-error: true  # Continue even if there are warnings/errors to list them
+
+    # Run Dart Code Metrics
+    - name: Dart Code Metrics
+      run: |
+        echo "Running Dart Code Metrics..."
+        dart pub global activate dart_code_metrics
+        dart pub global run dart_code_metrics:metrics analyze lib --reporter=console
+      continue-on-error: true  # Continue to allow full analysis run
+
+    # Run custom architecture checks
+    - name: Check Code Architecture
+      run: |
+        echo "Checking architecture rules..."
+        dart run tools/check_code_architecture.dart
+      continue-on-error: true  # Allow checks to run even if errors occur
+
+    # Check for TODO comments
+    - name: Check for TODO Comments
+      run: |
+        echo "Checking for TODO comments..."
+        TODO_FILES=$(grep -ril "TODO" .)
+        if [ -n "$TODO_FILES" ]; then
+          echo "TODO comments found in the following files:"
+          echo "$TODO_FILES"
+          exit 1  # Fail the job if TODO comments are present
+        else
+          echo "No TODO comments found."
+        fi
+
+    # Run unit tests
+    - name: Run Unit Tests
+      run: |
+        echo "Running unit tests..."
+        flutter test
+      continue-on-error: false  # Fail the job if tests do not pass
+
+    # Summary of all checks
+    - name: Summary
+      run: |
+        echo "All code quality checks and tests completed."
