@@ -48,6 +48,7 @@ jobs:
             git commit -m "Auto-format code for PR" || echo "No formatting changes to commit."
           else
             echo "All files are properly formatted."
+          fi
 
   dart_fix:
     name: Dart Fix
@@ -68,12 +69,9 @@ jobs:
       - name: Dart Fix
         run: |
           echo "Running dart fix..."
-          if ! dart fix --apply; then
-            echo "Dart fix applied changes."
-            git add .
-            git commit -m "Auto-applied dart fixes" || echo "No fixes applied."
-          else
-            echo "No fixes needed."
+          dart fix --apply
+          git add .
+          git commit -m "Auto-applied dart fixes" || echo "No fixes applied."
 
   flutter_analyze:
     name: Flutter Analyze
