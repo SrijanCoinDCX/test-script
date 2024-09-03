@@ -1,4 +1,4 @@
-name: Check Dart Lines and Asset Size in PR
+name: Release Checks
 
 on:
   pull_request:
