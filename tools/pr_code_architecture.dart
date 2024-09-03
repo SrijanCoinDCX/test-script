@@ -19,8 +19,19 @@ void main() {
     'origin/$baseRef...origin/$headRef'
   ]);
 
+  // Check for git command errors
+  if (result.exitCode != 0) {
+    _logError('✘ Git command failed: ${result.stderr}');
+    exit(1);
+  }
+
   // Split the output into a list of file paths
-  final changedFiles = result.stdout.toString().split('\n');
+  final changedFiles = result.stdout
+      .toString()
+      .trim()
+      .split('\n')
+      .where((file) => file.isNotEmpty)
+      .toList();
 
   // Filter the list to include only Dart files in the 'lib' directory
   final dartFiles = changedFiles
@@ -37,12 +48,18 @@ void main() {
 
   for (final file in dartFiles) {
     if (file.isEmpty) continue; // Skip empty lines in the list
-    final lines = File(file).readAsLinesSync();
 
-    // Check for class size and single responsibility violations
-    if (_checkClassSize(file, lines) ||
-        _checkSingleResponsibility(file, lines)) {
-      hasErrors = true; // Set error flag if any check fails
+    try {
+      final lines = File(file).readAsLinesSync();
+
+      // Check for class size and single responsibility violations
+      if (_checkClassSize(file, lines) ||
+          _checkSingleResponsibility(file, lines)) {
+        hasErrors = true; // Set error flag if any check fails
+      }
+    } catch (e) {
+      _logError('✘ Failed to read file $file: $e');
+      hasErrors = true;
     }
   }
 
