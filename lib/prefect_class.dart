@@ -13,8 +13,7 @@ abstract class NotificationService {
 class DatabaseUserRepository implements UserRepository {
   @override
   void saveUser(User user) {
-    debugPrint(
-        'Saving user ${user.userName} to the database and checked by Srijan.');
+    debugPrint('Saving user ${user.userName} to the database and checked.');
     // Implement actual database save logic
   }
 }
