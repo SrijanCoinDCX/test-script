@@ -1,0 +1,179 @@
+#!/bin/sh
+# Custom pre-commit hook for checking code quality and SOLID principles on staged changes
+
+# Checkmark and cross symbols for visual feedback
+CHECK_MARK="\033[1;32m✔\033[0m"
+CROSS_MARK="\033[1;31m✘\033[0m"
+
+# Initialize result variables for reporting the status of each check
+format_result="-"
+fix_result="-"
+architecture_result="-"
+analysis_result="-"
+metrics_result="-"
+todo_result="-"
+test_result="-"
+
+# Initialize a flag to track if any check fails
+any_check_failed=false
+
+echo "Running code quality checks on staged changes..."
+
+# Get the list of staged files
+staged_files=$(git diff --cached --name-only)
+
+# Exit early if no Dart or Flutter files are staged
+if [ -z "$staged_files" ] || ! echo "$staged_files" | grep -E '\.dart$' >/dev/null; then
+  echo "No Dart files staged for commit. Skipping checks."
+  exit 0
+fi
+
+# Dart format check: Ensures all Dart files are formatted correctly
+echo "Running dart format..."
+if dart format --set-exit-if-changed $staged_files; then
+  echo -e "$CHECK_MARK Dart format check passed"
+  format_result="$CHECK_MARK Dart format check passed"
+else
+  echo -e "$CROSS_MARK Dart format issues detected. Auto-formatting the files"
+  format_result="$CROSS_MARK Dart format issues detected. Auto-formatting the files"
+  # Automatically format the files and add them back to the staging area
+  dart format -o write $staged_files
+  git add $staged_files
+  echo "Files were formatted and added back to the commit."
+  format_result="$format_result\nFiles were formatted and added back to the commit."
+fi
+
+# Create a temporary file to store the list of modified files before running dart fix
+temp_file=$(mktemp)
+git diff --name-only > "$temp_file"
+
+# Dart fix check: Applies Dart fixes and commits changes if any modifications are made
+echo "Running dart fix..."
+if dart fix --apply; then
+  echo -e "$CHECK_MARK Dart fix applied successfully"
+  fix_result="$CHECK_MARK Dart fix applied successfully"
+
+  # Get the list of modified files after running dart fix
+  new_files=$(mktemp)
+  git diff --name-only > "$new_files"
+
+  # Sort the lists of files for comparison
+  sorted_temp_file=$(mktemp)
+  sorted_new_files=$(mktemp)
+  sort "$temp_file" > "$sorted_temp_file"
+  sort "$new_files" > "$sorted_new_files"
+
+  # Find files that were modified by dart fix
+  fixed_files=$(comm -13 "$sorted_temp_file" "$sorted_new_files")
+
+  # Check if any files were modified by dart fix
+  if [ -z "$fixed_files" ]; then
+    echo "No files were changed by dart fix."
+    fix_result="$fix_result\nNo files were changed by dart fix."
+  else
+    # Stage and commit only the modified files
+    echo "$fixed_files" | xargs git add
+    git commit -m "Apply dart fixes"
+    echo "Fixed files have been committed."
+    fix_result="$fix_result\nFixed files have been committed."
+  fi
+
+  # Clean up temporary files used for tracking changes
+  rm "$temp_file" "$new_files" "$sorted_temp_file" "$sorted_new_files"
+else
+  echo -e "$CROSS_MARK Dart fix failed"
+  fix_result="$CROSS_MARK Dart fix failed"
+  any_check_failed=true
+fi
+
+# Custom Dart script to check for adherence to code architectural guidelines
+echo "Analysing Code Architecture..."
+if dart run tools/check_code_architecture.dart; then
+  echo -e "$CHECK_MARK Architecture check passed"
+  architecture_result="$CHECK_MARK Architecture check passed"
+else
+  echo -e "$CROSS_MARK Architecture check failed"
+  architecture_result="$CROSS_MARK Architecture check failed"
+  any_check_failed=true
+fi
+
+# Flutter analysis: Checks for any issues such as errors, warnings, or info messages in the code
+echo "Running flutter analyze..."
+flutter analyze $staged_files
+analysis_status=$?
+
+# Verify the result of the flutter analyze command
+if [ $analysis_status -eq 0 ]; then
+  echo -e "$CHECK_MARK Dart analysis check passed"
+  analysis_result="$CHECK_MARK Dart analysis check passed"
+else
+  echo -e "$CROSS_MARK Dart analysis check failed"
+  analysis_result="$CROSS_MARK Dart analysis check failed"
+  any_check_failed=true
+fi
+
+# Dart Code Metrics: Analyzes the code for maintainability, complexity, and other code quality metrics
+echo "Running Dart Metrics analyzer..."
+if dart run dart_code_metrics:metrics analyze --disable-sunset-warning $staged_files; then
+  echo -e "$CHECK_MARK Dart Code Metrics analysis passed"
+  metrics_result="$CHECK_MARK Dart Code Metrics analysis passed"
+else
+  echo -e "$CROSS_MARK Dart Code Metrics analysis failed"
+  metrics_result="$CROSS_MARK Dart Code Metrics analysis failed"
+  any_check_failed=true
+fi
+
+# Check for TODO comments: Ensures no TODO comments are left in the staged files before committing
+echo "Checking for TODO comments..."
+todo_files=$(grep -ril "TODO" $staged_files)
+
+# Check if any TODO comments were found
+if [ -n "$todo_files" ]; then
+  echo "$CROSS_MARK TODO comments found in the following files:"
+  echo "$todo_files"
+  todo_result="$CROSS_MARK TODO comments found in the staged files"
+
+  # Display each TODO comment with its file name and line number
+  for file in $todo_files; do
+    echo "File: $file"
+    grep -in "TODO" "$file"
+  done
+#   any_check_failed=true
+else
+  echo -e "$CHECK_MARK No TODO comments found"
+  todo_result="$CHECK_MARK No TODO comments found"
+fi
+
+# Optional: Run unit tests if included in the workflow
+# Uncomment the following block to include unit testing
+# echo "Running unit tests..."
+# if flutter test; then
+#   echo -e "$CHECK_MARK Unit tests passed"
+#   test_result="$CHECK_MARK Unit tests passed"
+# else
+#   echo -e "$CROSS_MARK Unit tests failed"
+#   test_result="$CROSS_MARK Unit tests failed"
+#   any_check_failed=true
+# fi
+
+# Print the results of all checks in a tabular format
+echo "\nCode Quality Check Results:"
+echo "----------------------------------------"
+echo "Check                          | Result"
+echo "----------------------------------------"
+echo "Dart format                    | $format_result"
+echo "Dart fix                       | $fix_result"
+echo "Architecture check             | $architecture_result"
+echo "Dart analysis                  | $analysis_result"
+echo "Dart Code Metrics              | $metrics_result"
+echo "TODO comments                  | $todo_result"
+echo "Unit tests                     | $test_result"
+echo "----------------------------------------"
+
+# Final check to determine if any of the quality checks failed
+if [ "$any_check_failed" = true ]; then
+  echo "$CROSS_MARK Code quality checks failed. Please address the issues before committing."
+  exit 1
+fi
+
+echo "$CHECK_MARK Code quality checks passed. Ready to commit."
