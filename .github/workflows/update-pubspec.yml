@@ -25,6 +25,11 @@ jobs:
       uses: subosito/flutter-action@v2
       with:
         flutter-version: '3.19.6'
+        
+    - name: Configure Git User
+      run: |
+        git config --global user.email "github-actions@users.noreply.github.com"
+        git config --global user.name "GitHub Actions"
 
     - name: Update Dependencies to Release Branch
       run: |
