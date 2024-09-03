@@ -1,4 +1,4 @@
-name: Update pubspec.yaml on Release Branch
+name: Pointing Release Branch on pubspec.yaml 
 
 on:
   push:
@@ -25,6 +25,11 @@ jobs:
       uses: subosito/flutter-action@v2
       with:
         flutter-version: '3.19.6'
+        
+    - name: Configure Git User
+      run: |
+        git config --global user.email "github-actions@users.noreply.github.com"
+        git config --global user.name "GitHub Actions"
 
     - name: Update Dependencies to Release Branch
       run: |
@@ -40,7 +45,11 @@ jobs:
         # Commit only if there are changes
         if ! git diff-index --quiet HEAD; then
           git commit -m "Update dependencies to reference release branch"
-          git push
+          
+          # Push changes to the current branch name
+          # Extract the branch name from GitHub's environment variable
+          branch_name=$(echo $GITHUB_REF | sed 's/refs\/heads\///')
+          git push origin HEAD:$branch_name
         fi
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
