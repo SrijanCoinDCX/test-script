@@ -1,4 +1,4 @@
-name: Check Dart Lines and Asset Size
+name: Check Dart Lines and Asset Size in PR
 
 on:
   pull_request:
@@ -12,14 +12,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Dart
-        uses: dart-lang/setup-dart@v1
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
         with:
-          sdk: '3.19.6'  # You can specify a version if needed
+          flutter-version: '3.19.6'
 
       - name: Count Dart lines in PR
         id: count_lines
         run: |
+          # Fetching the changes from the base branch to compare the PR changes
+          git fetch origin ${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
+
           # Get the list of added or modified Dart files in the PR
           dart_files=$(git diff --name-only --diff-filter=AMR origin/${{ github.base_ref }}...${{ github.head_ref }} | grep '\.dart$')
 
@@ -28,8 +31,10 @@ jobs:
 
           # Loop through each Dart file and count lines
           for file in $dart_files; do
-            file_lines=$(wc -l < "$file")
-            line_count=$((line_count + file_lines))
+            if [ -f "$file" ]; then
+              file_lines=$(wc -l < "$file")
+              line_count=$((line_count + file_lines))
+            fi
           done
 
           echo "Total Dart lines of code: $line_count"
@@ -47,20 +52,38 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # - name: Build Flutter app (web example)
-      #   run: flutter build web  # Replace 'web' with your build target if different
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'latest'
 
-      - name: Check asset size
+      - name: Check asset sizes in PR
         run: |
+          # Fetching the changes from the base branch to compare the PR changes
+          git fetch origin ${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
+
           # Set asset size limit in bytes (e.g., 5 MB = 5 * 1024 * 1024 bytes)
           ASSET_SIZE_LIMIT=$((5 * 1024 * 1024))
 
-          # Check size of the generated assets (assuming assets are in 'build/web')
-          asset_size=$(du -sb build/web | awk '{print $1}')
+          # Get the list of added or modified asset files in PR (common Flutter asset directories)
+          asset_files=$(git diff --name-only --diff-filter=AMR origin/${{ github.base_ref }}...${{ github.head_ref }} | grep -E '^assets/|^images/|^res/|^icons/' | grep -E '\.(png|jpg|jpeg|gif|svg|webp|mp4|mp3|json|xml)$')
 
-          echo "Total asset size: $asset_size bytes"
-          if [ "$asset_size" -gt "$ASSET_SIZE_LIMIT" ]; then
-            echo "Asset size exceeds the limit of $ASSET_SIZE_LIMIT bytes."
+          # Initialize total asset size
+          total_asset_size=0
+
+          # Calculate the size of each asset file
+          for file in $asset_files; do
+            if [ -f "$file" ]; then
+              file_size=$(stat -c%s "$file")
+              total_asset_size=$((total_asset_size + file_size))
+            fi
+          done
+
+          echo "Total asset size: $total_asset_size bytes"
+
+          # Check if the total asset size exceeds the limit
+          if [ "$total_asset_size" -gt "$ASSET_SIZE_LIMIT" ]; then
+            echo "The total asset size exceeds the limit of $ASSET_SIZE_LIMIT bytes."
             exit 1
           else
             echo "Asset size is within the limit."
