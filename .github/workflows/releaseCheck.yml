@@ -1,0 +1,67 @@
+name: Check Dart Lines and Asset Size
+
+on:
+  pull_request:
+    branches:
+      - release
+
+jobs:
+  check-dart-lines:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: '3.19.6'  # You can specify a version if needed
+
+      - name: Count Dart lines in PR
+        id: count_lines
+        run: |
+          # Get the list of added or modified Dart files in the PR
+          dart_files=$(git diff --name-only --diff-filter=AMR origin/${{ github.base_ref }}...${{ github.head_ref }} | grep '\.dart$')
+
+          # Initialize line count
+          line_count=0
+
+          # Loop through each Dart file and count lines
+          for file in $dart_files; do
+            file_lines=$(wc -l < "$file")
+            line_count=$((line_count + file_lines))
+          done
+
+          echo "Total Dart lines of code: $line_count"
+          echo "line_count=$line_count" >> $GITHUB_ENV
+
+      - name: Fail if Dart lines exceed limit
+        if: env.line_count > 20
+        run: |
+          echo "The number of Dart lines in the PR exceeds the limit of 20 lines."
+          exit 1
+
+  check-asset-size:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # - name: Build Flutter app (web example)
+      #   run: flutter build web  # Replace 'web' with your build target if different
+
+      - name: Check asset size
+        run: |
+          # Set asset size limit in bytes (e.g., 5 MB = 5 * 1024 * 1024 bytes)
+          ASSET_SIZE_LIMIT=$((5 * 1024 * 1024))
+
+          # Check size of the generated assets (assuming assets are in 'build/web')
+          asset_size=$(du -sb build/web | awk '{print $1}')
+
+          echo "Total asset size: $asset_size bytes"
+          if [ "$asset_size" -gt "$ASSET_SIZE_LIMIT" ]; then
+            echo "Asset size exceeds the limit of $ASSET_SIZE_LIMIT bytes."
+            exit 1
+          else
+            echo "Asset size is within the limit."
+          fi
