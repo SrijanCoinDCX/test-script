@@ -40,7 +40,11 @@ jobs:
         # Commit only if there are changes
         if ! git diff-index --quiet HEAD; then
           git commit -m "Update dependencies to reference release branch"
-          git push
+          
+          # Push changes to the current branch name
+          # Extract the branch name from GitHub's environment variable
+          branch_name=$(echo $GITHUB_REF | sed 's/refs\/heads\///')
+          git push origin HEAD:$branch_name
         fi
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
