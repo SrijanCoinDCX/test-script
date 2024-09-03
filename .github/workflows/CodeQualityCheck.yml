@@ -7,87 +7,163 @@ on:
       - release
 
 jobs:
-  code_quality:
-    name: Code Quality Checks
+  setup:
+    name: Setup
     runs-on: ubuntu-latest
-
     steps:
-    # Checkout the repository
-    - name: Checkout code
-      uses: actions/checkout@v3
-      
-    # Fetch all branches to ensure the base branch exists locally
-    - name: Fetch all branches
-      run: git fetch --all
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    # Set up Flutter
-    - name: Setup Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.19.6' # or specify a version
+      - name: Fetch all branches
+        run: git fetch --all
 
-    # Install dependencies
-    - name: Install dependencies
-      run: flutter pub get
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.6' # Specify the Flutter version
 
-    # Run dart format check on all files
-    - name: Dart Format Check
-      run: |
-        echo "Checking dart format..."
-        if ! dart format --set-exit-if-changed .; then
-          echo "Code is not properly formatted. Running dart format."
-          dart format -o write .
-          git add .
-          git commit -m "Auto-format code for PR" || echo "No formatting changes to commit."
-        else
-          echo "All files are properly formatted."
-        fi
+  format_check:
+    name: Dart Format Check
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    # Run dart fix
-    - name: Dart Fix
-      run: |
-        echo "Running dart fix..."
-        if ! dart fix --apply; then
-          echo "Dart fix applied changes."
-          git add .
-          git commit -m "Auto-applied dart fixes" || echo "No fixes applied."
-        else
-          echo "No fixes needed."
-        fi
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.6'
 
-    # Run flutter analyze
-    - name: Flutter Analyze
-      run: |
-        echo "Running flutter analyze..."
-        flutter analyze
-      continue-on-error: true  # Continue even if there are warnings/errors to list them
+      - name: Install dependencies
+        run: flutter pub get
 
-    # Run Dart Code Metrics
-    - name: Dart Code Metrics
-      run: |
-        echo "Running Dart Code Metrics..."
-        dart pub global activate dart_code_metrics
-        dart pub global run dart_code_metrics:metrics analyze lib --reporter=console
-      continue-on-error: true  # Continue to allow full analysis run
+      - name: Dart Format Check
+        run: |
+          echo "Checking dart format..."
+          if ! dart format --set-exit-if-changed .; then
+            echo "Code is not properly formatted. Running dart format."
+            dart format -o write .
+            git add .
+            git commit -m "Auto-format code for PR" || echo "No formatting changes to commit."
+          else
+            echo "All files are properly formatted."
+          exit 1
 
-    # Run custom architecture checks
-    - name: Check Code Architecture
-      run: |
-        echo "Checking architecture rules..."
-        dart run tools/pr_code_architecture.dart
-      env:
-        GITHUB_BASE_REF: ${{ github.event.pull_request.base.ref }}
-        GITHUB_HEAD_REF: ${{ github.event.pull_request.head.ref }}
-      continue-on-error: true  # Allow checks to run even if errors occur
-          
-    # Run unit tests
-    - name: Run Unit Tests
-      run: |
-        echo "Running unit tests..."
-        flutter test
-      continue-on-error: true  # Fail the job if tests do not pass
+  dart_fix:
+    name: Dart Fix
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    # Summary of all checks
-    - name: Summary
-      run: |
-        echo "All code quality checks and tests completed."
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.6'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Dart Fix
+        run: |
+          echo "Running dart fix..."
+          if ! dart fix --apply; then
+            echo "Dart fix applied changes."
+            git add .
+            git commit -m "Auto-applied dart fixes" || echo "No fixes applied."
+          else
+            echo "No fixes needed."
+
+  flutter_analyze:
+    name: Flutter Analyze
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.6'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Flutter Analyze
+        run: |
+          echo "Running flutter analyze..."
+          flutter analyze
+        continue-on-error: true  # Continue even if there are warnings/errors to list them
+
+  dart_code_metrics:
+    name: Dart Code Metrics
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.6'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run Dart Code Metrics
+        run: |
+          echo "Running Dart Code Metrics..."
+          dart pub global activate dart_code_metrics
+          dart pub global run dart_code_metrics:metrics analyze lib --reporter=console
+        continue-on-error: true  # Continue to allow full analysis run
+
+  code_architecture:
+    name: Check Code Architecture
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.6'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Check Code Architecture
+        run: |
+          echo "Checking architecture rules..."
+          dart run tools/pr_code_architecture.dart
+        env:
+          GITHUB_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          GITHUB_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        continue-on-error: true  # Allow checks to run even if errors occur
+
+  unit_tests:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.6'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run Unit Tests
+        run: |
+          echo "Running unit tests..."
+          flutter test
+        continue-on-error: true  # Fail the job if tests do not pass
