@@ -1,4 +1,4 @@
-name: Update pubspec.yaml on Release Branch
+name: Pointing Release Branch on pubspec.yaml 
 
 on:
   push:
