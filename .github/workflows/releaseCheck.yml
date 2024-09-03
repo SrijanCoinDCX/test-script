@@ -55,7 +55,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: 'latest'
+          flutter-version: '3.19.6'
 
       - name: Check asset sizes in PR
         run: |
