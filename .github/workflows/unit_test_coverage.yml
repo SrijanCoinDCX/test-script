@@ -21,7 +21,6 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      # Install lcov package to get genhtml
       - name: Install lcov
         run: sudo apt-get install -y lcov
 
@@ -30,7 +29,6 @@ jobs:
           flutter test --coverage
           echo "Checking if coverage file exists:"
           ls -la coverage/
-
 
       - name: Generate coverage report
         run: genhtml coverage/lcov.info -o coverage/html
@@ -41,31 +39,36 @@ jobs:
         run: |
           # Debug: Output the lcov summary
           lcov --summary coverage/lcov.info
-
           # Extract the percentage coverage from the 'lines......' row in the lcov summary
           COVERAGE=$(lcov --summary coverage/lcov.info | grep -Po 'lines\.*: \K\d+.\d+')
           echo "Extracted Coverage: $COVERAGE%"
-
-          # Set the coverage as an environment variable for later use
           echo "coverage=$COVERAGE" >> $GITHUB_ENV
-
-          # Check if coverage is below threshold (80%)
           if (( $(echo "$COVERAGE < 80" | bc -l) )); then
             echo "Code coverage is below the required threshold of 80%!"
             exit 1
           else
             echo "Code coverage is above the required threshold."
           fi
-        continue-on-error: true  # Ensure the workflow continues even if the coverage check fails
+        continue-on-error: true
 
-      # Upload the coverage report, even if the coverage check failed
-      - name: Upload coverage report
-        id: upload_coverage
-        uses: actions/upload-artifact@v3
-        with:
-          name: coverage-report
-          path: coverage/html
-          retention-days: 7  # Optional: Keep the artifact for 7 days
+      # Push the generated coverage report to the gh-pages branch
+      - name: Deploy coverage report to GitHub Pages
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+          # Check out the gh-pages branch
+          git checkout --orphan gh-pages
+          git reset
+          git clean -fd
+
+          # Copy the generated HTML coverage report
+          cp -r coverage/html/* .
+
+          # Add, commit, and push the changes
+          git add .
+          git commit -m "Update coverage report"
+          git push --force "https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
 
       # Post the coverage results in the PR
       - name: Post comment with coverage results
@@ -74,9 +77,7 @@ jobs:
           header: Coverage Report
           message: |
             Current code coverage is at ${{ env.coverage }}%.
-            View the detailed [coverage report](${{ steps.upload_coverage.outputs.artifact_url }}).
-
-
+            View the detailed [coverage report](https://${{ github.repository_owner }}.github.io/${{ github.repository_name }}/index.html).
       # Final step to fail the job if the coverage threshold check failed
       - name: Fail if coverage below threshold
         if: steps.check_coverage.outcome == 'failure'
