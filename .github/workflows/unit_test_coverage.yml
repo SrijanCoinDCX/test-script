@@ -20,6 +20,10 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+      
+      # Install lcov package to get genhtml
+      - name: Install lcov
+        run: sudo apt-get install -y lcov
 
       - name: Run unit tests with coverage
         run: flutter test --coverage
