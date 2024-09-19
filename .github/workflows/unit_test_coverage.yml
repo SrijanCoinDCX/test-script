@@ -1,0 +1,54 @@
+name: Unit Test Coverage
+
+on:
+  pull_request:
+    branches:
+      - develop  # Adjust this to the branches you want to run the workflow on
+
+jobs:
+  test_coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.6'  # Use the Flutter version your project requires
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run unit tests with coverage
+        run: flutter test --coverage
+
+      - name: Generate coverage report
+        run: |
+          genhtml coverage/lcov.info -o coverage/html
+        if: success()  # Run this step only if the tests pass
+
+      - name: Check coverage threshold
+        run: |
+          COVERAGE=$(lcov --summary coverage/lcov.info | grep 'lines' | awk '{print $4}' | sed 's/%//')
+          echo "Coverage is at $COVERAGE%"
+          if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+            echo "Code coverage is below the required threshold of 80%!"
+            exit 1
+          fi
+        if: success()  # Only run this check if the coverage report was generated successfully
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage/html
+
+      - name: Post comment with coverage results
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: Coverage Report
+          message: |
+            Current code coverage is at ${{ steps.check_coverage.outputs.coverage }}%
+            View the detailed [coverage report](${{ steps.upload_coverage.outputs.artifact_url }})
