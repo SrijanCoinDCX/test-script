@@ -35,12 +35,22 @@ jobs:
       - name: Check coverage threshold
         id: check_coverage
         run: |
-          COVERAGE=$(lcov --summary coverage/lcov.info | grep 'lines' | awk '{print $4}' | sed 's/%//')
-          echo "Coverage is at $COVERAGE%"
+          # Debug: Output the lcov summary
+          lcov --summary coverage/lcov.info
+
+          # Extract the percentage coverage from the 'lines......' row in the lcov summary
+          COVERAGE=$(lcov --summary coverage/lcov.info | grep -Po 'lines\.*: \K\d+.\d+')
+          echo "Extracted Coverage: $COVERAGE%"
+
+          # Set the coverage as an environment variable for later use
           echo "coverage=$COVERAGE" >> $GITHUB_ENV
+
+          # Check if coverage is below threshold (80%)
           if (( $(echo "$COVERAGE < 80" | bc -l) )); then
             echo "Code coverage is below the required threshold of 80%!"
-            exit 1  # Continue with other steps, but mark this one as failed
+            exit 1
+          else
+            echo "Code coverage is above the required threshold."
           fi
         continue-on-error: true  # Ensure the workflow continues even if the coverage check fails
 
