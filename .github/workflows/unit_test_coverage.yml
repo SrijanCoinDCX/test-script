@@ -56,19 +56,22 @@ jobs:
 
       # Upload the coverage report, even if the coverage check failed
       - name: Upload coverage report
+        id: upload_coverage
         uses: actions/upload-artifact@v3
         with:
           name: coverage-report
           path: coverage/html
+          retention-days: 7  # Optional: Keep the artifact for 7 days
 
-      # Post comment with coverage results in the PR
+      # Post the coverage results in the PR
       - name: Post comment with coverage results
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: Coverage Report
           message: |
-            Current code coverage is at ${{ env.coverage }}%
-            View the detailed [coverage report](${{ steps.upload_coverage.outputs.artifact_url }})
+            Current code coverage is at ${{ env.coverage }}%.
+            View the detailed [coverage report](${{ steps.upload_coverage.outputs.artifact_url }}).
+
 
       # Final step to fail the job if the coverage threshold check failed
       - name: Fail if coverage below threshold
