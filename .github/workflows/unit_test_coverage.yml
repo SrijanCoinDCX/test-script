@@ -3,7 +3,7 @@ name: Unit Test Coverage
 on:
   pull_request:
     branches:
-      - develop  # Adjust this to the branches you want to run the workflow on
+      - develop
 
 jobs:
   test_coverage:
@@ -16,11 +16,11 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.6'  # Use the Flutter version your project requires
+          flutter-version: 'stable'
 
       - name: Install dependencies
         run: flutter pub get
-      
+
       # Install lcov package to get genhtml
       - name: Install lcov
         run: sudo apt-get install -y lcov
@@ -29,30 +29,38 @@ jobs:
         run: flutter test --coverage
 
       - name: Generate coverage report
-        run: |
-          genhtml coverage/lcov.info -o coverage/html
-        if: success()  # Run this step only if the tests pass
+        run: genhtml coverage/lcov.info -o coverage/html
 
+      # Check coverage threshold and continue even if threshold fails
       - name: Check coverage threshold
+        id: check_coverage
         run: |
           COVERAGE=$(lcov --summary coverage/lcov.info | grep 'lines' | awk '{print $4}' | sed 's/%//')
           echo "Coverage is at $COVERAGE%"
+          echo "coverage=$COVERAGE" >> $GITHUB_ENV
           if (( $(echo "$COVERAGE < 80" | bc -l) )); then
             echo "Code coverage is below the required threshold of 80%!"
-            exit 1
+            exit 1  # Continue with other steps, but mark this one as failed
           fi
-        if: success()  # Only run this check if the coverage report was generated successfully
+        continue-on-error: true  # Ensure the workflow continues even if the coverage check fails
 
+      # Upload the coverage report, even if the coverage check failed
       - name: Upload coverage report
         uses: actions/upload-artifact@v3
         with:
           name: coverage-report
           path: coverage/html
 
+      # Post comment with coverage results in the PR
       - name: Post comment with coverage results
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: Coverage Report
           message: |
-            Current code coverage is at ${{ steps.check_coverage.outputs.coverage }}%
+            Current code coverage is at ${{ env.coverage }}%
             View the detailed [coverage report](${{ steps.upload_coverage.outputs.artifact_url }})
+
+      # Final step to fail the job if the coverage threshold check failed
+      - name: Fail if coverage below threshold
+        if: steps.check_coverage.outcome == 'failure'
+        run: exit 1
