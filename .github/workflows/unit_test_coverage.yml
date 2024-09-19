@@ -26,7 +26,11 @@ jobs:
         run: sudo apt-get install -y lcov
 
       - name: Run unit tests with coverage
-        run: flutter test --coverage
+        run: |
+          flutter test --coverage
+          echo "Checking if coverage file exists:"
+          ls -la coverage/
+
 
       - name: Generate coverage report
         run: genhtml coverage/lcov.info -o coverage/html
