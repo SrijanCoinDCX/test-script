@@ -16,7 +16,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: 'stable'
+          flutter-version: '3.19.6'
 
       - name: Install dependencies
         run: flutter pub get
@@ -41,26 +41,26 @@ jobs:
           if (( $(echo "$COVERAGE < 80" | bc -l) )); then
             echo "Code coverage is below the required threshold of 80%!"
             exit 1  # Continue with other steps, but mark this one as failed
-          fi
         continue-on-error: true  # Ensure the workflow continues even if the coverage check fails
 
-      # Upload the coverage report, even if the coverage check failed
+      # Upload the HTML coverage report, even if the coverage check failed
       - name: Upload coverage report
         uses: actions/upload-artifact@v3
         with:
           name: coverage-report
           path: coverage/html
+          retention-days: 7  # Keep the artifact for 7 days
 
-      # Post comment with coverage results in the PR
+      # Post a link to the PR comment with the coverage results and report link
       - name: Post comment with coverage results
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: Coverage Report
           message: |
-            Current code coverage is at ${{ env.coverage }}%
-            View the detailed [coverage report](${{ steps.upload_coverage.outputs.artifact_url }})
+            Current code coverage is at ${{ env.coverage }}%.
+            View the detailed [HTML coverage report](${{ steps.upload_coverage.outputs.artifact_url }}).
 
-      # Final step to fail the job if the coverage threshold check failed
+      # Final step to fail the job if the coverage is below the threshold
       - name: Fail if coverage below threshold
         if: steps.check_coverage.outcome == 'failure'
         run: exit 1
