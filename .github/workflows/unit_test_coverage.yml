@@ -37,9 +37,6 @@ jobs:
       - name: Check coverage threshold
         id: check_coverage
         run: |
-          # Debug: Output the lcov summary
-          lcov --summary coverage/lcov.info
-          # Extract the percentage coverage from the 'lines......' row in the lcov summary
           COVERAGE=$(lcov --summary coverage/lcov.info | grep -Po 'lines\.*: \K\d+.\d+')
           echo "Extracted Coverage: $COVERAGE%"
           echo "coverage=$COVERAGE" >> $GITHUB_ENV
@@ -51,21 +48,27 @@ jobs:
           fi
         continue-on-error: true
 
-      # Push the generated coverage report to the gh-pages branch
+      # Push the generated coverage report to the gh-pages branch without wiping everything
       - name: Deploy coverage report to GitHub Pages
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
 
-          # Check out the gh-pages branch
-          git checkout --orphan gh-pages
-          git reset
-          git clean -fd
+          # Create a new folder for the report to prevent wiping out the whole repo
+          mkdir -p temp-gh-pages
+          cp -r coverage/html/* temp-gh-pages/
 
-          # Copy the generated HTML coverage report
-          cp -r coverage/html/* .
+          # Checkout the gh-pages branch
+          git fetch
+          git checkout gh-pages || git checkout --orphan gh-pages
+          
+          # Clean the branch but keep the .git directory intact
+          git rm -rf .
+          
+          # Move the coverage report into the root of the gh-pages branch
+          mv temp-gh-pages/* .
 
-          # Add, commit, and push the changes
+          # Commit and push the changes to the gh-pages branch
           git add .
           git commit -m "Update coverage report"
           git push --force "https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
@@ -77,7 +80,8 @@ jobs:
           header: Coverage Report
           message: |
             Current code coverage is at ${{ env.coverage }}%.
-            View the detailed [coverage report](https://${{ github.repository_owner }}.github.io/${{ github.repository_name }}/index.html).
+            View the detailed [coverage report](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/index.html).
+      
       # Final step to fail the job if the coverage threshold check failed
       - name: Fail if coverage below threshold
         if: steps.check_coverage.outcome == 'failure'
