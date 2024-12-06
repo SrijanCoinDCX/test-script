@@ -15,15 +15,39 @@ jobs:
       - name: Fetch PR details
         id: pr_details
         run: |
-          CHANGED_LINES=$(jq '. | .additions + .deletions' <<< "${{ toJson(github.event.pull_request) }}")
-          echo "::set-output name=changed_lines::$CHANGED_LINES"
+          # Safely extract additions and deletions
+          CHANGED_LINES=$(jq '.additions + .deletions' <<< "${{ toJson(github.event.pull_request) }}" || echo "0")
+          echo "Changed lines: $CHANGED_LINES"
+          
+          # Determine the label
+          if [ "$CHANGED_LINES" -lt 50 ]; then
+            LABEL="small"
+            COLOR="0E8A16"  # Green
+          elif [ "$CHANGED_LINES" -le 200 ]; then
+            LABEL="medium"
+            COLOR="FBCA04"  # Yellow
+          else
+            LABEL="large"
+            COLOR="D93F0B"  # Red
+          fi
+          echo "::set-output name=label::$LABEL"
+          echo "::set-output name=color::$COLOR"
 
-      - name: Label PR
-        uses: actions-ecosystem/action-add-labels@v1
-        with:
-          labels: |
-            ${{ steps.pr_details.outputs.changed_lines }} < 50 && echo "small" || 
-            (${{ steps.pr_details.outputs.changed_lines }} >= 50 && ${{ steps.pr_details.outputs.changed_lines }} <= 200 && echo "medium") || 
-            ${{ steps.pr_details.outputs.changed_lines }} > 200 && echo "large"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Add Label with Color
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/labels \
+            -d '{
+              "name": "'${{ steps.pr_details.outputs.label }}'",
+              "color": "'${{ steps.pr_details.outputs.color }}'"
+            }'
+
+      - name: Apply Label
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels \
+            -d '["${{ steps.pr_details.outputs.label }}"]'
