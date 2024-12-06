@@ -16,14 +16,18 @@ jobs:
         id: pr_details
         run: |
           CHANGED_LINES=$(jq '. | .additions + .deletions' <<< "${{ toJson(github.event.pull_request) }}")
-          echo "::set-output name=changed_lines::$CHANGED_LINES"
+          echo "Changed lines: $CHANGED_LINES"
+          if [ "$CHANGED_LINES" -lt 50 ]; then
+            echo "::set-output name=label::small"
+          elif [ "$CHANGED_LINES" -le 200 ]; then
+            echo "::set-output name=label::medium"
+          else
+            echo "::set-output name=label::large"
+          fi
 
       - name: Label PR
         uses: actions-ecosystem/action-add-labels@v1
         with:
-          labels: |
-            ${{ steps.pr_details.outputs.changed_lines }} < 50 && echo "small" || 
-            (${{ steps.pr_details.outputs.changed_lines }} >= 50 && ${{ steps.pr_details.outputs.changed_lines }} <= 200 && echo "medium") || 
-            ${{ steps.pr_details.outputs.changed_lines }} > 200 && echo "large"
+          labels: ${{ steps.pr_details.outputs.label }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
