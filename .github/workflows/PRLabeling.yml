@@ -59,8 +59,6 @@ jobs:
 
           # Check if any of the old labels ('small', 'medium', 'large') exist
           OLD_LABEL=$(echo "$CURRENT_LABELS" | jq -r '.[] | select(.name=="small" or .name=="medium" or .name=="large") | .name')
-          
-          # Set the label to remove if it exists
           echo "OLD_LABEL=$OLD_LABEL" >> $GITHUB_ENV
 
       - name: Remove old label if exists
