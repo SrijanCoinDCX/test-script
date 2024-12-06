@@ -37,7 +37,7 @@ jobs:
           if [ "$CHANGED_LINES" -lt 50 ]; then
             LABEL="small"
             COLOR="0E8A16"  # Green
-          elif [ "$CHANGED_LINES" -le 200 ]; then
+          elif [ "$CHANGED_LINES" -le 100 ]; then
             LABEL="medium"
             COLOR="FBCA04"  # Yellow
           else
