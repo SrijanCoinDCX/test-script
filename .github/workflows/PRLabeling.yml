@@ -15,8 +15,11 @@ jobs:
       - name: Fetch PR details
         id: pr_details
         run: |
-          CHANGED_LINES=$(jq '. | .additions + .deletions' <<< "${{ toJson(github.event.pull_request) }}")
+          # Safely extract additions and deletions
+          CHANGED_LINES=$(jq '.additions + .deletions' <<< "${{ toJson(github.event.pull_request) }}" || echo "0")
           echo "Changed lines: $CHANGED_LINES"
+          
+          # Determine the label
           if [ "$CHANGED_LINES" -lt 50 ]; then
             echo "::set-output name=label::small"
           elif [ "$CHANGED_LINES" -le 200 ]; then
