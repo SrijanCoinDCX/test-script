@@ -3,6 +3,7 @@ name: Label PR Based on Changes
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  workflow_dispatch:  # Allows you to manually trigger the action on existing PRs
 
 jobs:
   label_pr:
@@ -15,22 +16,148 @@ jobs:
       - name: Fetch PR details
         id: pr_details
         run: |
-          # Safely extract additions and deletions
-          CHANGED_LINES=$(jq '.additions + .deletions' <<< "${{ toJson(github.event.pull_request) }}" || echo "0")
-          echo "Changed lines: $CHANGED_LINES"
+          # Fetch the pull request's list of changed files using GitHub API
+          CHANGED_FILES=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files")
           
-          # Determine the label
+          # Initialize changed lines counter
+          CHANGED_LINES=0
+
+          # Loop through the changed files and sum up the additions and deletions
+          for FILE in $(echo "$CHANGED_FILES" | jq -r '.[].additions'); do
+            CHANGED_LINES=$((CHANGED_LINES + FILE))
+          done
+
+          for FILE in $(echo "$CHANGED_FILES" | jq -r '.[].deletions'); do
+            CHANGED_LINES=$((CHANGED_LINES + FILE))
+          done
+
+          echo "Total changed lines: $CHANGED_LINES"
+
+          # Set the label based on the number of changed lines
           if [ "$CHANGED_LINES" -lt 50 ]; then
-            echo "::set-output name=label::small"
+            LABEL="small"
+            COLOR="0E8A16"  # Green
           elif [ "$CHANGED_LINES" -le 200 ]; then
-            echo "::set-output name=label::medium"
+            LABEL="medium"
+            COLOR="FBCA04"  # Yellow
           else
-            echo "::set-output name=label::large"
+            LABEL="large"
+            COLOR="D93F0B"  # Red
           fi
 
-      - name: Label PR
-        uses: actions-ecosystem/action-add-labels@v1
-        with:
-          labels: ${{ steps.pr_details.outputs.label }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Save label and color to environment variables
+          echo "LABEL=$LABEL" >> $GITHUB_ENV
+          echo "COLOR=$COLOR" >> $GITHUB_ENV
+
+      - name: Get current labels on PR
+        id: get_labels
+        run: |
+          # Get the current labels applied to the PR
+          CURRENT_LABELS=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels")
+          echo "Current labels: $CURRENT_LABELS"
+
+          # Check if any of the old labels ('small', 'medium', 'large') exist
+          OLD_LABEL=$(echo "$CURRENT_LABELS" | jq -r '.[] | select(.name=="small" or .name=="medium" or .name=="large") | .name')
+          echo "OLD_LABEL=$OLD_LABEL" >> $GITHUB_ENV
+
+      - name: Remove old label if exists and different
+        if: ${{ env.OLD_LABEL != '' && env.OLD_LABEL != env.LABEL }}
+        run: |
+          # Remove the old label if it exists and is different from the new label
+          curl -X DELETE \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels/$OLD_LABEL"
+
+      - name: Add new label with color
+        run: |
+          # Add the new label with the corresponding color
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/labels \
+            -d '{
+              "name": "'${{ env.LABEL }}'",
+              "color": "'${{ env.COLOR }}'"
+            }'
+
+      - name: Apply new label to PR
+        run: |
+          # Apply the new label to the PR
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels \
+            -d '["${{ env.LABEL }}"]'
+
+  label_existing_prs:
+    runs-on: ubuntu-latest
+    needs: label_pr
+    if: github.event_name == 'workflow_dispatch'  # Only trigger when manually run
+
+    steps:
+      - name: Fetch all open PRs
+        run: |
+          PRS=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls?state=open")
+
+          # Loop through each open PR to apply the labels
+          for PR in $(echo "$PRS" | jq -r '.[].number'); do
+            echo "Processing PR #$PR"
+
+            # Fetch changed files for each PR
+            CHANGED_FILES=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/${{ github.repository }}/pulls/$PR/files")
+
+            CHANGED_LINES=0
+            for FILE in $(echo "$CHANGED_FILES" | jq -r '.[].additions'); do
+              CHANGED_LINES=$((CHANGED_LINES + FILE))
+            done
+
+            for FILE in $(echo "$CHANGED_FILES" | jq -r '.[].deletions'); do
+              CHANGED_LINES=$((CHANGED_LINES + FILE))
+            done
+
+            # Set the label based on the number of changed lines
+            if [ "$CHANGED_LINES" -lt 50 ]; then
+              LABEL="small"
+              COLOR="0E8A16"  # Green
+            elif [ "$CHANGED_LINES" -le 200 ]; then
+              LABEL="medium"
+              COLOR="FBCA04"  # Yellow
+            else
+              LABEL="large"
+              COLOR="D93F0B"  # Red
+            fi
+
+            # Get the current labels on PR
+            CURRENT_LABELS=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/${{ github.repository }}/issues/$PR/labels")
+
+            OLD_LABEL=$(echo "$CURRENT_LABELS" | jq -r '.[] | select(.name=="small" or .name=="medium" or .name=="large") | .name')
+
+            # Remove old label if it exists and is different
+            if [ "$OLD_LABEL" != "" ] && [ "$OLD_LABEL" != "$LABEL" ]; then
+              curl -X DELETE \
+                -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                "https://api.github.com/repos/${{ github.repository }}/issues/$PR/labels/$OLD_LABEL"
+            fi
+
+            # Add the new label with the corresponding color
+            curl -X POST \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github+json" \
+              https://api.github.com/repos/${{ github.repository }}/labels \
+              -d '{
+                "name": "'${LABEL}'",
+                "color": "'${COLOR}'"
+              }'
+
+            # Apply the new label to the PR
+            curl -X POST \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github+json" \
+              https://api.github.com/repos/${{ github.repository }}/issues/$PR/labels \
+              -d '["'${LABEL}'"]'
+          done
