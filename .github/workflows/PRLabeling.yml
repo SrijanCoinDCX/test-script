@@ -61,10 +61,10 @@ jobs:
           OLD_LABEL=$(echo "$CURRENT_LABELS" | jq -r '.[] | select(.name=="small" or .name=="medium" or .name=="large") | .name')
           echo "OLD_LABEL=$OLD_LABEL" >> $GITHUB_ENV
 
-      - name: Remove old label if exists
-        if: ${{ env.OLD_LABEL != '' }}
+      - name: Remove old label if exists and different
+        if: ${{ env.OLD_LABEL != '' && env.OLD_LABEL != env.LABEL }}
         run: |
-          # Remove the old label if it exists
+          # Remove the old label if it exists and is different from the new label
           curl -X DELETE \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels/$OLD_LABEL"
