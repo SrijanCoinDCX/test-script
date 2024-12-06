@@ -49,29 +49,8 @@ jobs:
           echo "LABEL=$LABEL" >> $GITHUB_ENV
           echo "COLOR=$COLOR" >> $GITHUB_ENV
 
-      - name: Get current labels on PR
-        id: get_labels
+      - name: Add Label with Color
         run: |
-          # Get the current labels applied to the PR
-          CURRENT_LABELS=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels")
-          echo "Current labels: $CURRENT_LABELS"
-
-          # Check if any of the old labels ('small', 'medium', 'large') exist
-          OLD_LABEL=$(echo "$CURRENT_LABELS" | jq -r '.[] | select(.name=="small" or .name=="medium" or .name=="large") | .name')
-          echo "OLD_LABEL=$OLD_LABEL" >> $GITHUB_ENV
-
-      - name: Remove old label if exists
-        if: ${{ env.OLD_LABEL != '' }}
-        run: |
-          # Remove the old label if it exists
-          curl -X DELETE \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels/$OLD_LABEL"
-
-      - name: Add new label with color
-        run: |
-          # Add the new label with the corresponding color
           curl -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
@@ -81,9 +60,8 @@ jobs:
               "color": "'${{ env.COLOR }}'"
             }'
 
-      - name: Apply new label to PR
+      - name: Apply Label
         run: |
-          # Apply the new label to the PR
           curl -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
