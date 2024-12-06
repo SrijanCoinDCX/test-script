@@ -1,0 +1,29 @@
+name: Label PR Based on Changes
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  label_pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Fetch PR details
+        id: pr_details
+        run: |
+          CHANGED_LINES=$(jq '. | .additions + .deletions' <<< "${{ toJson(github.event.pull_request) }}")
+          echo "::set-output name=changed_lines::$CHANGED_LINES"
+
+      - name: Label PR
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          labels: |
+            ${{ steps.pr_details.outputs.changed_lines }} < 50 && echo "small" || 
+            (${{ steps.pr_details.outputs.changed_lines }} >= 50 && ${{ steps.pr_details.outputs.changed_lines }} <= 200 && echo "medium") || 
+            ${{ steps.pr_details.outputs.changed_lines }} > 200 && echo "large"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
