@@ -10,6 +10,8 @@ jobs:
   setup:
     name: Setup
     runs-on: ubuntu-latest
+    outputs:
+      git-config-setup: ${{ steps.git-config-setup.outputs.result }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -20,7 +22,14 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.6' # Specify the Flutter version
+          flutter-version: '3.19.6'
+
+      - name: Configure Git User
+        id: git-config-setup
+        run: |
+          git config --global user.email "github-actions@users.noreply.github.com"
+          git config --global user.name "GitHub Actions"
+        continue-on-error: true
 
   format_check:
     name: Dart Format Check
@@ -37,12 +46,7 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
-        
-      - name: Configure Git User
-        run: |
-          git config --global user.email "github-actions@users.noreply.github.com"
-          git config --global user.name "GitHub Actions"
-          
+
       - name: Dart Format Check
         run: |
           echo "Checking dart format..."
@@ -70,12 +74,7 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
-        
-      - name: Configure Git User
-        run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "GitHub Actions"
-          
+
       - name: Dart Fix
         run: |
           echo "Running dart fix..."
@@ -103,7 +102,7 @@ jobs:
         run: |
           echo "Running flutter analyze..."
           flutter analyze
-        continue-on-error: true  # Continue even if there are warnings/errors to list them
+        continue-on-error: true
 
   dart_code_metrics:
     name: Dart Code Metrics
@@ -126,7 +125,7 @@ jobs:
           echo "Running Dart Code Metrics..."
           dart pub global activate dart_code_metrics
           dart pub global run dart_code_metrics:metrics analyze lib --reporter=console
-        continue-on-error: true  # Continue to allow full analysis run
+        continue-on-error: true
 
   code_architecture:
     name: Check Code Architecture
@@ -151,7 +150,7 @@ jobs:
         env:
           GITHUB_BASE_REF: ${{ github.event.pull_request.base.ref }}
           GITHUB_HEAD_REF: ${{ github.event.pull_request.head.ref }}
-        continue-on-error: true  # Allow checks to run even if errors occur
+        continue-on-error: true
 
   unit_tests:
     name: Run Unit Tests
@@ -173,7 +172,7 @@ jobs:
         run: |
           echo "Running unit tests..."
           flutter test
-        continue-on-error: true  # Fail the job if tests do not pass
+        continue-on-error: true
 
   check_todo:
     name: Check For TODO Comments
@@ -194,19 +193,12 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Configure Git User
-        run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "GitHub Actions"
-
       - name: Check for TODO Comments in Changed Dart Files
         run: |
           echo "Checking for TODO comments in changed Dart files..."
 
-          # Fetch both the base and head branches
           git fetch origin ${{ github.base_ref }} ${{ github.head_ref }}
 
-          # Get a list of changed Dart files in the PR
           CHANGED_DART_FILES=$(git diff --name-only --diff-filter=AMR origin/${{ github.base_ref }}...origin/${{ github.head_ref }} -- | grep -E '\.dart$')
 
           if [ -z "$CHANGED_DART_FILES" ]; then
@@ -214,21 +206,18 @@ jobs:
             exit 0
           fi
 
-          # Initialize a variable to track files with TODOs
           TODO_FILES=""
 
-          # Loop through changed Dart files to find TODO comments
           for file in $CHANGED_DART_FILES; do
             if grep -q "TODO" "$file"; then
               TODO_FILES="$TODO_FILES\n$file"
             fi
           done
 
-          # Report files with TODO comments or indicate that none were found
           if [ -n "$TODO_FILES" ]; then
             echo "TODO comments found in the following Dart files:"
             echo -e "$TODO_FILES"
-            exit 1  # Exit with failure if TODO comments are found
+            exit 1
           else
             echo "No TODO comments found in changed Dart files."
           fi
